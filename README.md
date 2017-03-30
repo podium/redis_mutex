@@ -25,13 +25,13 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
 ## Usage
 
-  3. Set the `redis_url` in your `config.exs`
+  1. Set the `redis_url` in your `config.exs`
 
     ```elixir
     config :redis_mutex, redis_url: {:system, "REDIS_URL"}
     ```
 
-  4. Call `use RedisMutex` in the module you want to use the lock.
+  2. Call `use RedisMutex` in the module you want to use the lock.
 
     ```elixir
     defmodule PossumLodge do
