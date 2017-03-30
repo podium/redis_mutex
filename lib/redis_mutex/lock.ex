@@ -35,8 +35,8 @@ defmodule RedisMutex.Lock do
     can be obtained by another request or resource.
 
     The lock will be released after the logic inside the `with_lock` has
-    completed, or the timeout, whatever comes first. The return value
-    of the macro will be whatever the return value of what's inside
+    completed, or the timeout, whichever comes first. The return value
+    of the macro will be the return value of the logic inside
     the 'with_lock' macro.
 
     defmodule PossumLodge do
@@ -71,8 +71,8 @@ defmodule RedisMutex.Lock do
   end
 
   @doc """
-  This function can be called manually. It takes in a key, unique string, and a timeout
-  in milliseconds. It will call itself recursively until it is able to set a lock
+  This function takes in a key, unique string, and a timeout in milliseconds.
+  It will call itself recursively until it is able to set a lock
   or the timeout expires.
   """
   def take_lock(key, uuid, timeout \\ @default_timeout, start \\ nil, finish \\ nil)
@@ -108,7 +108,7 @@ defmodule RedisMutex.Lock do
 
 
   @doc """
-  This function takes in the key and value that are to be released in Redis
+  This function takes in the key/value pair that are to be released in Redis
   """
   def unlock(key, value) do
     client = Process.whereis(:redis_mutex_connection)
