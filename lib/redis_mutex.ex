@@ -52,8 +52,8 @@ defmodule RedisMutex do
   """
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
-    # redis_url = Application.get_env(:redis_mutex, :redis_url)
-    redis_url = "redis://localhost:6379"
+    redis_url = Application.get_env(:redis_mutex, :redis_url)
+
     children = [
       worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
     ]
