@@ -11,6 +11,5 @@ defmodule RedisMutexTest do
 
       assert possum_lodge_motto == "I'm a man, but I can change. If I have to. I guess."
     end
-
   end
 end
