@@ -25,7 +25,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
 ## Usage
 
-  3. You'll need to set the `redis_url` in your `config.exs`
+  3. Set the `redis_url` in your `config.exs`
 
     ```elixir
     config :redis_mutex, redis_url: {:system, "REDIS_URL"}

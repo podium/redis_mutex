@@ -19,7 +19,7 @@ defmodule RedisMutex do
       [applications: [:redis_mutex]]
     end
 
-  3. You'll need to set the `redis_url` in your `config.exs`
+  3. Set the `redis_url` in your `config.exs`
 
     config :redis_mutex, redis_url: {:system, "REDIS_URL"}
 
