@@ -53,7 +53,7 @@ defmodule RedisMutex.Lock do
     end
   """
 
-  @@spec with_lock(any, integer \\ 30000) :: type
+  @spec with_lock(any, integer) :: any
   defmacro with_lock(key, timeout \\ @default_timeout, do: clause) do
     quote do
       key = unquote(key)
