@@ -46,7 +46,6 @@ defmodule RedisMutex.Mixfile do
   defp package do
     [
       name: :redis_mutex,
-      files: ["lib", "mix.exs", "README*"],
       licenses: ["Apache 2.0"],
       maintainers: ["Travis Elnicky, Jason Turner"],
       links: %{
