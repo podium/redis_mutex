@@ -31,19 +31,8 @@ end
 config :redis_mutex, redis_url: {:system, "REDIS_URL"}
 ```
 
-2. Call `use RedisMutex` in the module you want to use the lock.
-
-```elixir
-defmodule PossumLodge do
-
-  def get_oath do
-    "Quando omni flunkus moritati"
-  end
-end
-```
-
-
-With a Redis lock:
+2. Call `use RedisMutex` in the module you want to use the lock and use `with_lock` to
+lock critical parts of your code.
 
 ```elixir
 defmodule PossumLodge do
