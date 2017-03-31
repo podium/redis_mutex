@@ -52,19 +52,34 @@ defmodule RedisMutex do
   """
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
-    redis_url = Application.get_env(:redis_mutex, :redis_url)
-
-    children = [
-      worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
-    ]
 
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(children(Mix.env), opts)
+  end
+
+  def children(:test) do
+    []
+  end
+
+  def children(_env) do
+    import Supervisor.Spec, warn: false
+
+    redis_url = Application.get_env(:redis_mutex, :redis_url)
+    [
+      worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
+    ]
   end
 
   defmacro __using__(_opts) do
-    quote do
-      import RedisMutex.Lock, warn: false
+    case Mix.env do
+      :test ->
+        quote do
+          import RedisMutex.LockMock, warn: false
+        end
+      _ ->
+        quote do
+          import RedisMutex.Lock, warn: false
+        end
     end
   end
 end
