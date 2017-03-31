@@ -39,6 +39,7 @@ defmodule RedisMutex.Lock do
     of the macro will be the return value of the logic inside
     the 'with_lock' macro.
 
+    ```elixir
     defmodule PossumLodge do
       use RedisMutex
       alias PossumLodge.{Repo, Member}
@@ -51,6 +52,7 @@ defmodule RedisMutex.Lock do
         end
       end
     end
+    ```
   """
 
   @spec with_lock(any, integer) :: any
