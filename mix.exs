@@ -9,6 +9,7 @@ defmodule RedisMutex.Mixfile do
      start_permanent: Mix.env == :prod,
      package: package(),
      description: description(),
+     source_url: "https://github.com/podium/redis_mutex",
      deps: deps()]
   end
 
@@ -45,7 +46,6 @@ defmodule RedisMutex.Mixfile do
 
   defp package do
     [
-      name: :redis_mutex,
       licenses: ["Apache 2.0"],
       maintainers: ["Travis Elnicky, Jason Turner"],
       links: %{
