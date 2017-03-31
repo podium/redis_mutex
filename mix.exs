@@ -7,6 +7,9 @@ defmodule RedisMutex.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     package: package(),
+     description: description(),
+     source_url: "https://github.com/podium/redis_mutex",
      deps: deps()]
   end
 
@@ -32,6 +35,22 @@ defmodule RedisMutex.Mixfile do
       {:exredis, "~> 0.2.5"},
       {:timex, "~> 3.1.13"},
       {:uuid, "~> 1.1.7"}
+    ]
+  end
+
+  defp description do
+    """
+    RedisMutex is a library for creating a Redis lock for a single Redis instance.
+    """
+  end
+
+  defp package do
+    [
+      licenses: ["Apache 2.0"],
+      maintainers: ["Travis Elnicky, Jason Turner"],
+      links: %{
+        "GitHub" => "https://github.com/podium/redis_mutex"
+      }
     ]
   end
 end
