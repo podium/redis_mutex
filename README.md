@@ -4,7 +4,7 @@ RedisMutex is a library for creating a Redis lock for a single Redis instance.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+[From Hex](https://hex.pm/docs/publish), the package can be installed as:
 
 1. Add `redis_mutex` to your list of dependencies in `mix.exs`:
 
@@ -38,7 +38,7 @@ lock critical parts of your code.
 defmodule PossumLodge do
   use RedisMutex
 
-  def get_oath do
+  def get_oauth do
     with_lock("my_key") do
       "Quando omni flunkus moritati"
     end
