@@ -62,8 +62,9 @@ defmodule RedisMutex do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    env = Application.get_env(:cache_client, :env)
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children(Mix.env), opts)
+    Supervisor.start_link(children(env || Mix.env), opts)
   end
 
   def children(:test) do
@@ -80,7 +81,8 @@ defmodule RedisMutex do
   end
 
   defmacro __using__(_opts) do
-    case Mix.env do
+    env = Application.get_env(:cache_client, :env)
+    case env || Mix.env do
       :test ->
         quote do
           import RedisMutex.LockMock, warn: false
