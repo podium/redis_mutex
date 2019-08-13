@@ -3,7 +3,7 @@ defmodule RedisMutex.Mixfile do
 
   def project do
     [app: :redis_mutex,
-     version: "0.2.0",
+     version: "0.2.1",
      elixir: "~> 1.8",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -35,7 +35,7 @@ defmodule RedisMutex.Mixfile do
       {:ex_doc, "~> 0.20", only: :dev},
       {:exredis, "~> 0.3"},
       {:timex, "~> 3.6"},
-      {:uuid, "~> 1.1"}
+      {:elixir_uuid, "~> 1.2"}
     ]
   end
 
