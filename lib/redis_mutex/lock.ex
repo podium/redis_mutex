@@ -16,7 +16,7 @@ defmodule RedisMutex.Lock do
   """
 
   @default_timeout :timer.seconds(40)
-  @expiry :timer.seconds(20)
+  @default_expiry :timer.seconds(20)
 
 
   @doc """
@@ -56,13 +56,14 @@ defmodule RedisMutex.Lock do
   """
 
   @spec with_lock(any, integer) :: any
-  defmacro with_lock(key, timeout \\ @default_timeout, do: clause) do
+  defmacro with_lock(key, timeout \\ @default_timeout, expiry \\ @default_expiry, do: clause) do
     quote do
       key = unquote(key)
       timeout = unquote(timeout)
+      expiry = unquote(expiry)
       uuid = UUID.uuid1()
 
-      RedisMutex.Lock.take_lock(key, uuid, timeout)
+      RedisMutex.Lock.take_lock(key, uuid, timeout, expiry)
 
       block_value = unquote(clause)
 
@@ -77,18 +78,18 @@ defmodule RedisMutex.Lock do
   It will call itself recursively until it is able to set a lock
   or the timeout expires.
   """
-  def take_lock(key, uuid, timeout \\ @default_timeout, finish \\ nil)
-  def take_lock(key, uuid, timeout, nil) do
+  def take_lock(key, uuid, timeout \\ @default_timeout, expiry \\ @default_expiry, finish \\ nil)
+  def take_lock(key, uuid, timeout, expiry, nil) do
     finish = Timex.shift(Timex.now(), milliseconds: timeout)
-    take_lock(key, uuid, timeout, finish)
+    take_lock(key, uuid, timeout, expiry, finish)
   end
-  def take_lock(key, uuid, timeout, finish) do
+  def take_lock(key, uuid, timeout, expiry, finish) do
     if Timex.before?(finish, Timex.now()) do
       raise RedisMutex.Error, message: "Unable to obtain lock."
     end
 
-    if !lock(key, uuid) do
-      take_lock(key, uuid, timeout, finish)
+    if !lock(key, uuid, expiry) do
+      take_lock(key, uuid, timeout, expiry, finish)
     end
   end
 
@@ -98,10 +99,10 @@ defmodule RedisMutex.Lock do
   set in Redis, `lock` returns `true`. If it isn't able to set in Redis, `lock`
   returns `false`.
   """
-  def lock(key, value) do
+  def lock(key, value, expiry) do
     client = Process.whereis(:redis_mutex_connection)
 
-    case Exredis.query(client, ["SET", key, value, "NX", "PX", "#{@expiry}"]) do
+    case Exredis.query(client, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
       "OK" -> true
       :undefined -> false
     end

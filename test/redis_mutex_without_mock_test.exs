@@ -53,6 +53,7 @@ defmodule RedisMutexWithoutMockTest do
           end
         end)
 
+      # make sure one task failed and one task succeeded, regardless of which
       cond do
         is_tuple(result_1) ->
           assert {:ok, :timed_out} == result_1
@@ -67,6 +68,27 @@ defmodule RedisMutexWithoutMockTest do
         true ->
           flunk("Both tasks ran, which means our lock timeout did not work!")
       end
+    end
+
+    test "expires the lock after the given time" do
+      # Kick off a task that will run for a long time, holding the lock
+      t = Task.async(fn ->
+        with_lock("two_threads_lock_expires", 10000, 250) do
+          :timer.sleep(10000)
+        end
+      end)
+
+      # let enough time pass so that the lock expire
+      Task.yield(t, 1000)
+
+      # try to run another task and see if it gets the lock
+      results = with_lock("two_threads_lock_expires", 1000, 500) do
+        "I RAN!!!"
+      end
+
+      Task.shutdown(t, :brutal_kill)
+
+      assert results == "I RAN!!!"
     end
   end
 
