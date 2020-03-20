@@ -77,19 +77,18 @@ defmodule RedisMutex.Lock do
   It will call itself recursively until it is able to set a lock
   or the timeout expires.
   """
-  def take_lock(key, uuid, timeout \\ @default_timeout, start \\ nil, finish \\ nil)
-  def take_lock(key, uuid, timeout, nil, nil) do
-    start = Timex.now
-    finish = Timex.shift(start, milliseconds: timeout)
-    take_lock(key, uuid, timeout, start, finish)
+  def take_lock(key, uuid, timeout \\ @default_timeout, finish \\ nil)
+  def take_lock(key, uuid, timeout, nil) do
+    finish = Timex.shift(Timex.now(), milliseconds: timeout)
+    take_lock(key, uuid, timeout, finish)
   end
-  def take_lock(key, uuid, timeout, start, finish) do
-    if Timex.before?(finish, start) do
+  def take_lock(key, uuid, timeout, finish) do
+    if Timex.before?(finish, Timex.now()) do
       raise RedisMutex.Error, message: "Unable to obtain lock."
     end
 
     if !lock(key, uuid) do
-      take_lock(key, uuid, timeout, start, finish)
+      take_lock(key, uuid, timeout, finish)
     end
   end
 
