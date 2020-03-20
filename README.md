@@ -45,3 +45,15 @@ defmodule PossumLodge do
   end
 end
 ```
+
+## Tests
+To run the portion of the test suite that does not rely on Redis, run the default command:
+```
+mix test
+```
+
+To run the full test suite including those portions that depend on a Redis instance running
+and being configured in `config/test.exs`, run the following command:
+```
+REDIS_TESTS=true mix test --include=redis_dependent
+```

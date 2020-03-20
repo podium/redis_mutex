@@ -64,29 +64,35 @@ defmodule RedisMutex do
 
     env = Application.get_env(:cache_client, :env)
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children(env || Mix.env), opts)
+    Supervisor.start_link(children(env || Mix.env()), opts)
   end
 
   def children(:test) do
-    []
+    load_redis_tests = System.get_env("REDIS_TESTS")
+    if load_redis_tests != nil, do: children(:non_test_env), else: []
   end
 
   def children(_env) do
     import Supervisor.Spec, warn: false
 
     redis_url = Application.get_env(:redis_mutex, :redis_url)
+
     [
       worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
     ]
   end
 
-  defmacro __using__(_opts) do
-    env = Application.get_env(:cache_client, :env)
-    case env || Mix.env do
+  defmacro __using__(opts) do
+    env =
+      if Keyword.keyword?(opts),
+        do: Keyword.get(opts, :cache_client_env, Application.get_env(:cache_client, :env))
+
+    case env || Mix.env() do
       :test ->
         quote do
           import RedisMutex.LockMock, warn: false
         end
+
       _ ->
         quote do
           import RedisMutex.Lock, warn: false
