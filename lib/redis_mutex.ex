@@ -83,20 +83,17 @@ defmodule RedisMutex do
   end
 
   defmacro __using__(opts) do
-    env =
+    lock_module =
       if Keyword.keyword?(opts),
-        do: Keyword.get(opts, :cache_client_env, Application.get_env(:cache_client, :env))
+        do:
+          Keyword.get(
+            opts,
+            :lock_module,
+            Application.get_env(:redis_mutex, :lock_module, RedisMutex.Lock)
+          )
 
-    case env || Mix.env() do
-      :test ->
-        quote do
-          import RedisMutex.LockMock, warn: false
-        end
-
-      _ ->
-        quote do
-          import RedisMutex.Lock, warn: false
-        end
+    quote do
+      import unquote(lock_module), warn: false
     end
   end
 end

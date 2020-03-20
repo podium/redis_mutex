@@ -1,6 +1,6 @@
 defmodule RedisMutexWithoutMockTest do
   use ExUnit.Case
-  use RedisMutex, cache_client_env: :not_a_test_env
+  use RedisMutex, lock_module: RedisMutex.Lock
   doctest RedisMutex
 
   @moduletag :redis_dependent
