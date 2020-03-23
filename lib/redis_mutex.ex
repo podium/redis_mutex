@@ -62,6 +62,8 @@ defmodule RedisMutex do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    :ok = Redix.Telemetry.attach_default_handler()
+
     env = Application.get_env(:cache_client, :env)
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
     Supervisor.start_link(children(env || Mix.env()), opts)

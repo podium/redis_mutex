@@ -1,23 +1,19 @@
 defmodule RedisMutex.Lock do
-  import Exredis.Script
-
   @moduledoc """
   This module contains the actual Redis locking business logic. The `with_lock`
   macro is generally the only function that should be used from this module, as it
   will handle the logic for setting and removing key/values in Redis.
   """
 
-  defredis_script :unlock_script, """
+  @default_timeout :timer.seconds(40)
+  @default_expiry :timer.seconds(20)
+  @unlock_script """
   if redis.call("get", KEYS[1]) == ARGV[1] then
     return redis.call("del", KEYS[1])
   else
     return 0
   end
   """
-
-  @default_timeout :timer.seconds(40)
-  @default_expiry :timer.seconds(20)
-
 
   @doc """
     This macro takes in a key and a timeout.
@@ -102,12 +98,11 @@ defmodule RedisMutex.Lock do
   def lock(key, value, expiry) do
     client = Process.whereis(:redis_mutex_connection)
 
-    case Exredis.query(client, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
+    case Redix.command!(client, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
       "OK" -> true
-      :undefined -> false
+      nil -> false
     end
   end
-
 
   @doc """
   This function takes in the key/value pair that are to be released in Redis
@@ -115,9 +110,9 @@ defmodule RedisMutex.Lock do
   def unlock(key, value) do
     client = Process.whereis(:redis_mutex_connection)
 
-    case unlock_script(client, [key], [value]) do
-      "1" -> true
-      "0" -> false
+    case Redix.command!(client, ["EVAL", @unlock_script, 1, key, value]) do
+      1 -> true
+      0 -> false
     end
   end
 end
