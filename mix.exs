@@ -17,7 +17,7 @@ defmodule RedisMutex.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :timex],
+    [extra_applications: [:logger, :timex],
      mod: {RedisMutex, []}]
   end
 
@@ -33,7 +33,7 @@ defmodule RedisMutex.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.20", only: :dev},
-      {:exredis, "~> 0.3"},
+      {:redix, ">= 0.0.0"},
       {:timex, "~> 3.6"},
       {:elixir_uuid, "~> 1.2"}
     ]

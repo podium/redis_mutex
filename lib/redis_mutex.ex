@@ -62,35 +62,40 @@ defmodule RedisMutex do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    :ok = Redix.Telemetry.attach_default_handler()
+
     env = Application.get_env(:cache_client, :env)
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children(env || Mix.env), opts)
+    Supervisor.start_link(children(env || Mix.env()), opts)
   end
 
   def children(:test) do
-    []
+    load_redis_tests = System.get_env("REDIS_TESTS")
+    if load_redis_tests != nil, do: children(:non_test_env), else: []
   end
 
   def children(_env) do
     import Supervisor.Spec, warn: false
 
     redis_url = Application.get_env(:redis_mutex, :redis_url)
+
     [
       worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
     ]
   end
 
-  defmacro __using__(_opts) do
-    env = Application.get_env(:cache_client, :env)
-    case env || Mix.env do
-      :test ->
-        quote do
-          import RedisMutex.LockMock, warn: false
-        end
-      _ ->
-        quote do
-          import RedisMutex.Lock, warn: false
-        end
+  defmacro __using__(opts) do
+    lock_module =
+      if Keyword.keyword?(opts),
+        do:
+          Keyword.get(
+            opts,
+            :lock_module,
+            Application.get_env(:redis_mutex, :lock_module, RedisMutex.Lock)
+          )
+
+    quote do
+      import unquote(lock_module), warn: false
     end
   end
 end

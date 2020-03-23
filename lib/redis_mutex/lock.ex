@@ -1,23 +1,19 @@
 defmodule RedisMutex.Lock do
-  import Exredis.Script
-
   @moduledoc """
   This module contains the actual Redis locking business logic. The `with_lock`
   macro is generally the only function that should be used from this module, as it
   will handle the logic for setting and removing key/values in Redis.
   """
 
-  defredis_script :unlock_script, """
+  @default_timeout :timer.seconds(40)
+  @default_expiry :timer.seconds(20)
+  @unlock_script """
   if redis.call("get", KEYS[1]) == ARGV[1] then
     return redis.call("del", KEYS[1])
   else
     return 0
   end
   """
-
-  @default_timeout :timer.seconds(40)
-  @expiry :timer.seconds(20)
-
 
   @doc """
     This macro takes in a key and a timeout.
@@ -56,13 +52,14 @@ defmodule RedisMutex.Lock do
   """
 
   @spec with_lock(any, integer) :: any
-  defmacro with_lock(key, timeout \\ @default_timeout, do: clause) do
+  defmacro with_lock(key, timeout \\ @default_timeout, expiry \\ @default_expiry, do: clause) do
     quote do
       key = unquote(key)
       timeout = unquote(timeout)
+      expiry = unquote(expiry)
       uuid = UUID.uuid1()
 
-      RedisMutex.Lock.take_lock(key, uuid, timeout)
+      RedisMutex.Lock.take_lock(key, uuid, timeout, expiry)
 
       block_value = unquote(clause)
 
@@ -77,19 +74,18 @@ defmodule RedisMutex.Lock do
   It will call itself recursively until it is able to set a lock
   or the timeout expires.
   """
-  def take_lock(key, uuid, timeout \\ @default_timeout, start \\ nil, finish \\ nil)
-  def take_lock(key, uuid, timeout, nil, nil) do
-    start = Timex.now
-    finish = Timex.shift(start, milliseconds: timeout)
-    take_lock(key, uuid, timeout, start, finish)
+  def take_lock(key, uuid, timeout \\ @default_timeout, expiry \\ @default_expiry, finish \\ nil)
+  def take_lock(key, uuid, timeout, expiry, nil) do
+    finish = Timex.shift(Timex.now(), milliseconds: timeout)
+    take_lock(key, uuid, timeout, expiry, finish)
   end
-  def take_lock(key, uuid, timeout, start, finish) do
-    if Timex.before?(finish, start) do
+  def take_lock(key, uuid, timeout, expiry, finish) do
+    if Timex.before?(finish, Timex.now()) do
       raise RedisMutex.Error, message: "Unable to obtain lock."
     end
 
-    if !lock(key, uuid) do
-      take_lock(key, uuid, timeout, start, finish)
+    if !lock(key, uuid, expiry) do
+      take_lock(key, uuid, timeout, expiry, finish)
     end
   end
 
@@ -99,15 +95,14 @@ defmodule RedisMutex.Lock do
   set in Redis, `lock` returns `true`. If it isn't able to set in Redis, `lock`
   returns `false`.
   """
-  def lock(key, value) do
+  def lock(key, value, expiry) do
     client = Process.whereis(:redis_mutex_connection)
 
-    case Exredis.query(client, ["SET", key, value, "NX", "PX", "#{@expiry}"]) do
+    case Redix.command!(client, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
       "OK" -> true
-      :undefined -> false
+      nil -> false
     end
   end
-
 
   @doc """
   This function takes in the key/value pair that are to be released in Redis
@@ -115,9 +110,9 @@ defmodule RedisMutex.Lock do
   def unlock(key, value) do
     client = Process.whereis(:redis_mutex_connection)
 
-    case unlock_script(client, [key], [value]) do
-      "1" -> true
-      "0" -> false
+    case Redix.command!(client, ["EVAL", @unlock_script, 1, key, value]) do
+      1 -> true
+      0 -> false
     end
   end
 end
