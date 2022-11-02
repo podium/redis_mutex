@@ -50,8 +50,6 @@ defmodule RedisMutex.Lock do
     end
     ```
   """
-
-  @spec with_lock(any, integer) :: any
   defmacro with_lock(key, timeout \\ @default_timeout, expiry \\ @default_expiry, do: clause) do
     quote do
       key = unquote(key)
