@@ -17,8 +17,8 @@ defmodule RedisMutex.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [extra_applications: [:logger, :timex],
-     mod: {RedisMutex, []}]
+    [extra_applications: [:logger],
+     mod: {RedisMutex.Application, []}]
   end
 
   # Dependencies can be Hex packages:

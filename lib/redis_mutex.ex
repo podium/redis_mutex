@@ -1,6 +1,4 @@
 defmodule RedisMutex do
-  use Application
-
   @moduledoc """
   An Elixir library for using Redis locks
 
@@ -11,7 +9,7 @@ defmodule RedisMutex do
 
     ```elixir
     def deps do
-      [{:redis_mutex, "~> 0.1.0"}]
+      [{:redis_mutex, "~> 0.4.0"}]
     end
     ```
 
@@ -54,35 +52,6 @@ defmodule RedisMutex do
     end
     ```
   """
-
-  @doc """
-  The start function will get the redis_url from the config and connect to the
-  Redis instance.
-  """
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
-    :ok = Redix.Telemetry.attach_default_handler()
-
-    env = Application.get_env(:cache_client, :env) || Application.get_env(:redis_mutex, :env)
-    opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children(env), opts)
-  end
-
-  def children(:test) do
-    load_redis_tests = System.get_env("REDIS_TESTS")
-    if load_redis_tests != nil, do: children(:non_test_env), else: []
-  end
-
-  def children(_env) do
-    import Supervisor.Spec, warn: false
-
-    redis_url = Application.get_env(:redis_mutex, :redis_url)
-
-    [
-      worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
-    ]
-  end
 
   defmacro __using__(opts) do
     lock_module =
