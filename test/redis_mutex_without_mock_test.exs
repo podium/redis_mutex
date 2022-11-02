@@ -10,8 +10,8 @@ defmodule RedisMutexWithoutMockTest do
       [start_1, end_1, start_2, end_2] =
         run_in_parallel(2, 5000, fn ->
           with_lock("two_threads_lock") do
-            start_time = Timex.now()
-            end_time = Timex.now()
+            start_time = DateTime.utc_now()
+            end_time = DateTime.utc_now()
             {start_time, end_time}
           end
         end)
@@ -22,12 +22,12 @@ defmodule RedisMutexWithoutMockTest do
           end
         end)
 
-      assert Timex.before?(start_1, end_1)
-      assert Timex.before?(start_2, end_2)
+      assert DateTime.compare(start_1, end_1) == :lt
+      assert DateTime.compare(start_2, end_2) == :lt
 
       # one ran before the other, regardless of which
-      assert (Timex.before?(start_1, start_2) and Timex.before?(end_1, end_2)) or
-               (Timex.before?(start_2, start_1) and Timex.before?(end_2, end_1))
+      assert (DateTime.compare(start_1, start_2) == :lt and DateTime.compare(end_1, end_2) == :lt) or
+               (DateTime.compare(start_2, start_1) == :lt and DateTime.compare(end_2, end_1) == :lt)
     end
 
     test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
@@ -37,9 +37,9 @@ defmodule RedisMutexWithoutMockTest do
             # Make sure this doesn't conflict with other tests in this file
             # because everything gets run async and they could step on each other
             with_lock("two_threads_one_loses_lock", 500) do
-              start_time = Timex.now()
+              start_time = DateTime.utc_now()
               :timer.sleep(1000)
-              end_time = Timex.now()
+              end_time = DateTime.utc_now()
               {start_time, end_time}
             end
           rescue
@@ -58,12 +58,12 @@ defmodule RedisMutexWithoutMockTest do
         is_tuple(result_1) ->
           assert {:ok, :timed_out} == result_1
           [start_time, end_time] = result_2
-          assert Timex.before?(start_time, end_time)
+          assert DateTime.compare(start_time, end_time) == :lt
 
         is_tuple(result_2) ->
           assert {:ok, :timed_out} == result_2
           [start_time, end_time] = result_1
-          assert Timex.before?(start_time, end_time)
+          assert DateTime.compare(start_time, end_time) == :lt
 
         true ->
           flunk("Both tasks ran, which means our lock timeout did not work!")

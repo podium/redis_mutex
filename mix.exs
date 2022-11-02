@@ -32,10 +32,11 @@ defmodule RedisMutex.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.20", only: :dev},
       {:redix, ">= 0.0.0"},
-      {:timex, "~> 3.6"},
-      {:elixir_uuid, "~> 1.2"}
+      {:elixir_uuid, "~> 1.2"},
+
+      # Dev and test dependencies
+      {:ex_doc, "~> 0.29", only: :dev}
     ]
   end
 
