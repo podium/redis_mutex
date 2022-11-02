@@ -27,7 +27,8 @@ defmodule RedisMutexWithoutMockTest do
 
       # one ran before the other, regardless of which
       assert (DateTime.compare(start_1, start_2) == :lt and DateTime.compare(end_1, end_2) == :lt) or
-               (DateTime.compare(start_2, start_1) == :lt and DateTime.compare(end_2, end_1) == :lt)
+               (DateTime.compare(start_2, start_1) == :lt and
+                  DateTime.compare(end_2, end_1) == :lt)
     end
 
     test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
@@ -72,19 +73,21 @@ defmodule RedisMutexWithoutMockTest do
 
     test "expires the lock after the given time" do
       # Kick off a task that will run for a long time, holding the lock
-      t = Task.async(fn ->
-        with_lock("two_threads_lock_expires", 10000, 250) do
-          :timer.sleep(10000)
-        end
-      end)
+      t =
+        Task.async(fn ->
+          with_lock("two_threads_lock_expires", 10000, 250) do
+            :timer.sleep(10000)
+          end
+        end)
 
       # let enough time pass so that the lock expire
       Task.yield(t, 1000)
 
       # try to run another task and see if it gets the lock
-      results = with_lock("two_threads_lock_expires", 1000, 500) do
-        "I RAN!!!"
-      end
+      results =
+        with_lock("two_threads_lock_expires", 1000, 500) do
+          "I RAN!!!"
+        end
 
       Task.shutdown(t, :brutal_kill)
 

@@ -73,10 +73,12 @@ defmodule RedisMutex.Lock do
   or the timeout expires.
   """
   def take_lock(key, uuid, timeout \\ @default_timeout, expiry \\ @default_expiry, finish \\ nil)
+
   def take_lock(key, uuid, timeout, expiry, nil) do
     finish = DateTime.add(DateTime.utc_now(), timeout, :millisecond)
     take_lock(key, uuid, timeout, expiry, finish)
   end
+
   def take_lock(key, uuid, timeout, expiry, finish) do
     if DateTime.compare(finish, DateTime.utc_now()) == :lt do
       raise RedisMutex.Error, message: "Unable to obtain lock."
