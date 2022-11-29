@@ -2,23 +2,24 @@ defmodule RedisMutex.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :redis_mutex,
-     version: "0.3.0",
-     elixir: "~> 1.8",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     package: package(),
-     description: description(),
-     source_url: "https://github.com/podium/redis_mutex",
-     deps: deps()]
+    [
+      app: :redis_mutex,
+      version: "0.4.0",
+      elixir: "~> 1.11",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      package: package(),
+      description: description(),
+      source_url: "https://github.com/podium/redis_mutex",
+      deps: deps()
+    ]
   end
 
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :timex],
-     mod: {RedisMutex, []}]
+    [extra_applications: [:logger], mod: {RedisMutex.Application, []}]
   end
 
   # Dependencies can be Hex packages:
@@ -32,10 +33,11 @@ defmodule RedisMutex.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.20", only: :dev},
-      {:exredis, "~> 0.3"},
-      {:timex, "~> 3.6"},
-      {:elixir_uuid, "~> 1.2"}
+      {:redix, ">= 0.0.0"},
+      {:elixir_uuid, "~> 1.2"},
+
+      # Dev and test dependencies
+      {:ex_doc, "~> 0.29", only: :dev}
     ]
   end
 

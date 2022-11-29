@@ -1,6 +1,4 @@
 defmodule RedisMutex do
-  use Application
-
   @moduledoc """
   An Elixir library for using Redis locks
 
@@ -11,7 +9,7 @@ defmodule RedisMutex do
 
     ```elixir
     def deps do
-      [{:redis_mutex, "~> 0.1.0"}]
+      [{:redis_mutex, "~> 0.4.0"}]
     end
     ```
 
@@ -55,42 +53,18 @@ defmodule RedisMutex do
     ```
   """
 
-  @doc """
-  The start function will get the redis_url from the config and connect to the
-  Redis instance.
-  """
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
+  defmacro __using__(opts) do
+    lock_module =
+      if Keyword.keyword?(opts),
+        do:
+          Keyword.get(
+            opts,
+            :lock_module,
+            Application.get_env(:redis_mutex, :lock_module, RedisMutex.Lock)
+          )
 
-    env = Application.get_env(:cache_client, :env)
-    opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
-    Supervisor.start_link(children(env || Mix.env), opts)
-  end
-
-  def children(:test) do
-    []
-  end
-
-  def children(_env) do
-    import Supervisor.Spec, warn: false
-
-    redis_url = Application.get_env(:redis_mutex, :redis_url)
-    [
-      worker(RedisMutex.Connection, [:redis_mutex_connection, redis_url])
-    ]
-  end
-
-  defmacro __using__(_opts) do
-    env = Application.get_env(:cache_client, :env)
-    case env || Mix.env do
-      :test ->
-        quote do
-          import RedisMutex.LockMock, warn: false
-        end
-      _ ->
-        quote do
-          import RedisMutex.Lock, warn: false
-        end
+    quote do
+      import unquote(lock_module), warn: false
     end
   end
 end
