@@ -14,6 +14,6 @@ defmodule RedisMutex.Connection do
   end
 
   def start_link(name, uri) do
-    Redix.start_link(uri, name: name)
+    Redix.start_link(uri, name: name, sync_connect: true)
   end
 end
