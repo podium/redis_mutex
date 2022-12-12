@@ -1,5 +1,9 @@
 # RedisMutex
 
+[![Build Status](https://github.com/podium/redis_mutex/actions/workflows/ci.yml/badge.svg)](https://github.com/podium/redis_mutex/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/redis_mutex.svg)](https://hex.pm/packages/redis_mutex) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/redis_mutex)
+[![Total Download](https://img.shields.io/hexpm/dt/redis_mutex.svg)](https://hex.pm/packages/redis_mutex)
+[![License](https://img.shields.io/hexpm/l/redis_mutex.svg)](https://github.com/podium/redis_mutex/blob/master/LICENSE.md)
+
 RedisMutex is a library for creating a Redis lock for a single Redis instance.
 
 ## Installation
