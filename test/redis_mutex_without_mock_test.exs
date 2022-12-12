@@ -7,7 +7,7 @@ defmodule RedisMutexWithoutMockTest do
 
   describe "with_lock" do
     test "works with two tasks contending for the same lock, making one run after the other" do
-      [start_1, end_1, start_2, end_2] =
+      res =
         run_in_parallel(2, 5000, fn ->
           with_lock("two_threads_lock") do
             start_time = DateTime.utc_now()
@@ -15,7 +15,9 @@ defmodule RedisMutexWithoutMockTest do
             {start_time, end_time}
           end
         end)
-        |> Enum.flat_map(fn result ->
+
+      [start_1, end_1, start_2, end_2] =
+        Enum.flat_map(res, fn result ->
           case result do
             {:ok, {start_time, end_time}} -> [start_time, end_time]
             {:error, e} -> raise e
@@ -32,7 +34,7 @@ defmodule RedisMutexWithoutMockTest do
     end
 
     test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
-      [result_1, result_2] =
+      res =
         run_in_parallel(2, 5000, fn ->
           try do
             # Make sure this doesn't conflict with other tests in this file
@@ -47,7 +49,9 @@ defmodule RedisMutexWithoutMockTest do
             RedisMutex.Error -> :timed_out
           end
         end)
-        |> Enum.map(fn result ->
+
+      [result_1, result_2] =
+        Enum.map(res, fn result ->
           case result do
             {:ok, {start_time, end_time}} -> [start_time, end_time]
             error -> error
@@ -75,8 +79,8 @@ defmodule RedisMutexWithoutMockTest do
       # Kick off a task that will run for a long time, holding the lock
       t =
         Task.async(fn ->
-          with_lock("two_threads_lock_expires", 10000, 250) do
-            :timer.sleep(10000)
+          with_lock("two_threads_lock_expires", 10_000, 250) do
+            :timer.sleep(10_000)
           end
         end)
 
@@ -96,7 +100,8 @@ defmodule RedisMutexWithoutMockTest do
   end
 
   defp run_in_parallel(concurrency, timeout, content) do
-    Enum.map(1..concurrency, fn _ ->
+    1..concurrency
+    |> Enum.map(fn _ ->
       Task.async(content)
     end)
     |> Task.yield_many(timeout)

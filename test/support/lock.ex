@@ -1,4 +1,7 @@
 defmodule RedisMutex.LockMock do
+  @moduledoc """
+  A lock mocking helper for testing
+  """
   @default_timeout :timer.seconds(40)
   @default_expiry :timer.seconds(20)
 

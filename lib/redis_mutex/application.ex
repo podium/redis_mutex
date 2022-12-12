@@ -3,7 +3,7 @@ defmodule RedisMutex.Application do
 
   use Application
 
-  @impl true
+  @impl Application
   def start(_type, _args) do
     env = Application.get_env(:cache_client, :env) || Application.get_env(:redis_mutex, :env)
     opts = [strategy: :one_for_one, name: RedisMutex.Supervisor]
