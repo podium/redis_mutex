@@ -5,7 +5,6 @@ defmodule RedisMutex.ApplicationTest do
 
   use ExUnit.Case
   doctest RedisMutex
-  alias RedisMutex.Application, as: RedisApp
 
   setup do
     on_exit(fn ->
@@ -19,7 +18,7 @@ defmodule RedisMutex.ApplicationTest do
       Application.put_env(:redis_mutex, :redis_url, "redis://localhost:6379/")
 
       assert [{RedisMutex.Connection, [:redis_mutex_connection, "redis://localhost:6379/"]}] =
-               RedisApp.children(:some_env)
+               RedisMutex.Application.children(:some_env)
     end
 
     test "can pass just redix opts" do
@@ -29,7 +28,7 @@ defmodule RedisMutex.ApplicationTest do
       )
 
       assert [{RedisMutex.Connection, [:redis_mutex_connection, [host: "localhost", port: 6379]]}] =
-               RedisApp.children(:some_env)
+               RedisMutex.Application.children(:some_env)
     end
 
     test "cannot pass both URI and redix opts" do
@@ -41,7 +40,7 @@ defmodule RedisMutex.ApplicationTest do
           port: 6379
         )
 
-        RedisApp.children(:some_env)
+        RedisMutex.Application.children(:some_env)
       end
     end
 
@@ -49,7 +48,7 @@ defmodule RedisMutex.ApplicationTest do
       assert_raise RedisMutex.Error, fn ->
         Application.put_env(:redis_mutex, :redis_url, nil)
         Application.put_env(:redis_mutex, :redix_config, nil)
-        RedisApp.children(:some_env)
+        RedisMutex.Application.children(:some_env)
       end
     end
   end
