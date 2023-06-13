@@ -58,15 +58,17 @@ defmodule RedisMutex do
   to pass any of the [configuration options available to Redix](https://hexdocs.pm/redix/Redix.html#start_link/1-options):
 
   ```elixir
-  config :redis_mutex, redix_config: [
-    host: "example.com", port: 9999, ssl: true,
-    socket_opts: [
-    customize_hostname_check: [
-      match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+  config :redis_mutex,
+    redix_config: [
+      host: "example.com",
+      port: 9999,
+      ssl: true,
+      socket_opts: [
+        customize_hostname_check: [
+          match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+        ]
       ]
     ]
-  ]
-  ```
 
   Only one of `:redix_config` and `:redis_url` can be used at a time.
   """
