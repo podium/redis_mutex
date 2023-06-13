@@ -28,6 +28,21 @@ end
 config :redis_mutex, redis_url: {:system, "REDIS_URL"}
 ```
 
+Alternatively, pass [`redix` options](https://hexdocs.pm/redix/Redix.html#start_link/1-options) directly:
+
+```elixir
+config :redis_mutex,
+  redix_config: [
+    host: "example.com",
+    port: 9999,
+    ssl: true,
+    socket_opts: [
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ]
+  ]
+
 2. Call `use RedisMutex` in the module you want to use the lock and use `with_lock` to
 lock critical parts of your code.
 
