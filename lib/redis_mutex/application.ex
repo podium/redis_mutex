@@ -24,11 +24,10 @@ defmodule RedisMutex.Application do
     [{RedisMutex.Connection, opts}]
   end
 
-  defp build_opts(nil, nil),
-    do:
-      raise(RedisMutex.Error,
-        message: ":redis_mutex config missing: must specify :redis_url or :redix_config"
-      )
+  defp build_opts(nil, nil) do
+    raise RedisMutex.Error,
+      message: ":redis_mutex config missing: must specify :redis_url or :redix_config"
+  end
 
   defp build_opts(url, nil) when is_binary(url), do: [:redis_mutex_connection, url]
   defp build_opts(nil, opts) when is_list(opts), do: [:redis_mutex_connection, opts]
