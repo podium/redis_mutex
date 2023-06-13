@@ -18,25 +18,28 @@ defmodule RedisMutex.ApplicationTest do
     test "can pass just a redis URI" do
       Application.put_env(:redis_mutex, :redis_url, "redis://localhost:6379/")
 
-      assert [{RedisMutex.Connection, [:redis_mutex_connection, "redis://localhost:6379/"]}] = RedisApp.children(:some_env)
+      assert [{RedisMutex.Connection, [:redis_mutex_connection, "redis://localhost:6379/"]}] =
+               RedisApp.children(:some_env)
     end
 
     test "can pass just redix opts" do
-      Application.put_env(:redis_mutex, :redix_config, [
+      Application.put_env(:redis_mutex, :redix_config,
         host: "localhost",
         port: 6379
-      ])
+      )
 
-      assert [{RedisMutex.Connection, [:redis_mutex_connection, [host: "localhost", port: 6379]]}] = RedisApp.children(:some_env)
+      assert [{RedisMutex.Connection, [:redis_mutex_connection, [host: "localhost", port: 6379]]}] =
+               RedisApp.children(:some_env)
     end
 
     test "cannot pass both URI and redix opts" do
       assert_raise RedisMutex.Error, fn ->
         Application.put_env(:redis_mutex, :redis_url, "redis://localhost:6379/")
-        Application.put_env(:redis_mutex, :redix_config, [
+
+        Application.put_env(:redis_mutex, :redix_config,
           host: "localhost",
           port: 6379
-        ])
+        )
 
         RedisApp.children(:some_env)
       end
