@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## v0.4.0 (2022-11-22)
+## 0.5.0 (2023-08-16)
+
+### Changed
+
+* Support custom redix opts by @brentjanderson (#23)
+* Updates some of the dependencies
+## 0.4.0 (2022-11-22)
 
 ### Changed
 

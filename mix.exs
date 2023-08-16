@@ -2,7 +2,7 @@ defmodule RedisMutex.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/podium/redis_mutex"
-  @version "0.4.0"
+  @version "0.5.0"
 
   def project do
     [
@@ -40,8 +40,8 @@ defmodule RedisMutex.Mixfile do
     [
       main: "readme",
       extras: [
-        "CHANGELOG.md",
-        {:"README.md", title: "Readme"}
+        {:"README.md", title: "Readme"},
+        "CHANGELOG.md"
       ],
       source_url: @source_url,
       source_ref: "v#{@version}",
