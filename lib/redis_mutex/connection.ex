@@ -13,7 +13,11 @@ defmodule RedisMutex.Connection do
     }
   end
 
-  def start_link(name, uri) do
+  def start_link(name, uri) when is_binary(uri) do
     Redix.start_link(uri, name: name, sync_connect: true)
+  end
+
+  def start_link(name, opts) when is_list(opts) do
+    [name: name, sync_connect: true] |> Keyword.merge(opts) |> Redix.start_link()
   end
 end
