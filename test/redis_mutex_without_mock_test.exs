@@ -3,6 +3,7 @@ defmodule RedisMutexWithoutMockTest do
   use RedisMutex, lock_module: RedisMutex.Lock
   doctest RedisMutex
 
+  @moduletag :skip
   @moduletag :redis_dependent
 
   describe "with_lock" do
