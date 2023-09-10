@@ -22,7 +22,7 @@ defmodule RedisMutex.Mixfile do
   end
 
   def application do
-    [extra_applications: [:logger], mod: {RedisMutex.Application, []}]
+    [extra_applications: [:logger]]
   end
 
   defp deps do
