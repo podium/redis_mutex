@@ -1,5 +1,5 @@
 ExUnit.configure(exclude: [:redis_dependent])
-ExUnit.start()
+ExUnit.start(exclude: [:skip])
 
 {:ok, files} = File.ls("./test/support")
 
