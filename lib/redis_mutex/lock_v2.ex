@@ -3,8 +3,14 @@ defmodule RedisMutex.LockV2 do
   Defines the lock behaviour for RedisMutex.
   """
 
-  @callback start_link(start_options :: Keyword.t()) :: {:ok, pid()} | {:error, any()}
+  @type start_options :: Keyword.t()
 
-  @callback with_lock(key :: String.t(), timeout :: integer(), expiry :: integer(), do: clause :: term()) ::
+  @callback child_spec(start_options :: start_options()) :: Supervisor.child_spec()
+
+  @callback start_link(start_options :: start_options()) :: {:ok, pid()} | {:error, any()}
+
+  @callback with_lock(key :: String.t(), timeout :: integer(), expiry :: integer(),
+              do: clause :: term()
+            ) ::
               any()
 end
