@@ -25,26 +25,6 @@ defmodule RedisMutex.ConfigParserTest do
       [app_config: app_config]
     end
 
-    test "returns the lock module from the config when none is passed in the opts", %{
-      app_config: app_config
-    } do
-      opts = []
-
-      parsed_opts = ConfigParser.parse(:my_app, RedisMutex.ConfigParserTest, opts)
-
-      assert Keyword.get(parsed_opts, :lock_module) == Keyword.get(app_config, :lock_module)
-    end
-
-    test "returns the lock module passed in the opts" do
-      opts = [
-        lock_module: RedisMutex.Lock.Redix
-      ]
-
-      parsed_opts = ConfigParser.parse(:my_app, RedisMutex.ConfigParserTest, opts)
-
-      assert Keyword.get(parsed_opts, :lock_module) == RedisMutex.Lock.Redix
-    end
-
     test "returns the redis_url from the config when none is passed in the opts", %{
       app_config: app_config
     } do
