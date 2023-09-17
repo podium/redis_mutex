@@ -13,7 +13,7 @@ defmodule RedisMutex.SupervisorTest do
 
       opts = [
         redis_url: "redis://localhost:6379",
-        name: RedisMutex.SupervisorTest.MyModule
+        name: RedisMutexV2
       ]
 
       expect(RedisMutex.LockV2Mock, :child_spec, fn spec_opts ->
@@ -36,7 +36,7 @@ defmodule RedisMutex.SupervisorTest do
              } = child
 
       assert start_opts == [
-               [redis_url: "redis://localhost:6379", name: RedisMutex.SupervisorTest.MyModule]
+               [redis_url: "redis://localhost:6379", name: RedisMutexV2]
              ]
     end
   end

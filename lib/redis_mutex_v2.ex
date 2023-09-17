@@ -50,7 +50,7 @@ defmodule RedisMutexV2 do
           app,
           __MODULE__,
           the_lock_module,
-          opts ++ [name: __MODULE__]
+          opts ++ [name: RedisMutexV2]
         )
       end
     end

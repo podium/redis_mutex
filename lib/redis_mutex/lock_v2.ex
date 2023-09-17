@@ -52,7 +52,7 @@ defmodule RedisMutex.LockV2 do
 
       block_value = unquote(clause)
 
-      RedisMutex.Lock.unlock(key, uuid)
+      RedisMutex.LockV2.unlock(key, uuid)
 
       block_value
     end
@@ -87,10 +87,7 @@ defmodule RedisMutex.LockV2 do
   returns `false`.
   """
   def lock(key, value, expiry) do
-    # CHANGE THIS SO WE CAN FIND THE RIGHT PROCESS BASED ON THE WORKER
-    client = Process.whereis(:redis_mutex_connection)
-
-    case Redix.command!(client, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
+    case Redix.command!(client(), ["SET", key, value, "NX", "PX", "#{expiry}"]) do
       "OK" -> true
       nil -> false
     end
@@ -100,11 +97,11 @@ defmodule RedisMutex.LockV2 do
   This function takes in the key/value pair that are to be released in Redis
   """
   def unlock(key, value) do
-    client = Process.whereis(:redis_mutex_connection)
-
-    case Redix.command!(client, ["EVAL", @unlock_script, 1, key, value]) do
+    case Redix.command!(client(), ["EVAL", @unlock_script, 1, key, value]) do
       1 -> true
       0 -> false
     end
   end
+
+  defp client, do: Process.whereis(RedisMutexV2)
 end
