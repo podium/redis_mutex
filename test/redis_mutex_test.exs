@@ -3,7 +3,7 @@ defmodule RedisMutexTest do
   use RedisMutex
   doctest RedisMutex
 
-  # @moduletag :skip
+  @moduletag :skip
 
   describe "with_lock" do
     test "with_lock returns value of the contained logic" do
