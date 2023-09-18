@@ -17,8 +17,6 @@ defmodule RedisMutex.SupervisorTest do
       ]
 
       expect(RedisMutex.LockV2Mock, :child_spec, fn spec_opts ->
-        dbg(spec_opts)
-
         %{
           id: RedisMutex.LockV2Mock,
           start: {RedisMutex.LockV2Mock, :start_link, [spec_opts]},

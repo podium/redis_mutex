@@ -72,7 +72,6 @@ defmodule RedisMutex.ConfigParserTest do
       ]
 
       parsed_opts = ConfigParser.parse(:my_app, RedisMutex.ConfigParserTest, opts)
-      dbg(parsed_opts)
 
       refute Keyword.has_key?(parsed_opts, :redis_url)
     end

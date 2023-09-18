@@ -34,25 +34,21 @@ if Code.ensure_loaded?(Redix) do
         restart: :permanent,
         shutdown: 500
       }
-      |> dbg()
     end
 
     @spec start_link(start_options()) :: :ignore | {:error, any} | {:ok, pid}
     def start_link(start_options \\ []) do
-      IO.puts("RedisMutex.LockV2.start_link!")
-      dbg(start_options)
       {redis_url, redix_opts} = Keyword.pop(start_options, :redis_url)
       {name, redix_opts} = Keyword.pop(redix_opts, :name)
+
       case redis_url do
         nil ->
           [name: name, sync_connect: true]
           |> Keyword.merge(redix_opts)
           |> Redix.start_link()
-          |> dbg()
-
 
         redis_url when is_binary(redis_url) ->
-          Redix.start_link(redis_url, name: name, sync_connect: true) |> dbg()
+          Redix.start_link(redis_url, name: name, sync_connect: true)
       end
     end
 
@@ -93,7 +89,6 @@ if Code.ensure_loaded?(Redix) do
     end
 
     def take_lock(key, uuid, timeout, expiry, finish) do
-      IO.puts("take_lock")
       if DateTime.compare(finish, DateTime.utc_now()) == :lt do
         raise RedisMutex.Error, message: "Unable to obtain lock."
       end
@@ -110,7 +105,6 @@ if Code.ensure_loaded?(Redix) do
     returns `false`.
     """
     def lock(key, value, expiry) do
-      IO.puts("lock")
       case Redix.command!(client(), ["SET", key, value, "NX", "PX", "#{expiry}"]) do
         "OK" -> true
         nil -> false
@@ -121,7 +115,6 @@ if Code.ensure_loaded?(Redix) do
     This function takes in the key/value pair that are to be released in Redis
     """
     def unlock(key, value) do
-      IO.puts("unlock")
       case Redix.command!(client(), ["EVAL", @unlock_script, 1, key, value]) do
         1 -> true
         0 -> false
