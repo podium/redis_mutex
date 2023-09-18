@@ -28,7 +28,7 @@ defmodule RedisMutex.Supervisor do
     parsed_opts = ConfigParser.parse(otp_app, module, opts)
 
     children = [
-      {lock_module, parsed_opts}
+      {lock_module, [parsed_opts]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

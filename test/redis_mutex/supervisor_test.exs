@@ -36,7 +36,7 @@ defmodule RedisMutex.SupervisorTest do
              } = child
 
       assert start_opts == [
-               [redis_url: "redis://localhost:6379", name: RedisMutexV2]
+               [[redis_url: "redis://localhost:6379", name: RedisMutexV2]]
              ]
     end
   end
