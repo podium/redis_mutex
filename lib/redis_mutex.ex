@@ -1,90 +1,58 @@
 defmodule RedisMutex do
   @moduledoc """
-  An Elixir library for using Redis locks
-
-  ## Setup
-
-
-  1. Add `redis_mutex` to your list of dependencies in `mix.exs`:
-
-    ```elixir
-    def deps do
-      [{:redis_mutex, "~> 0.4.0"}]
-    end
-    ```
-
-  2. Ensure `redis_mutex` is started before your application:
-
-    ```elixir
-    def application do
-      [applications: [:redis_mutex]]
-    end
-    ```
-
-  3. Set the `redis_url` in your `config.exs`
-
-    ```elixir
-    config :redis_mutex, redis_url: {:system, "REDIS_URL"}
-    ```
-
-  4. Call `use RedisMutex` in the module you want to use the lock.
-
-    ```elixir
-    defmodule PossumLodge do
-
-      def get_oath do
-        "Quando omni flunkus moritati"
-      end
-    end
-    ```
-
-    With a Redis lock:
-
-    ```elixir
-    defmodule PossumLodge do
-      use RedisMutex
-
-      def get_oath do
-        with_lock("my_key") do
-          "Quando omni flunkus moritati"
-        end
-      end
-    end
-    ```
-
-  ## Custom Redix configuration
-
-  Instead of passing a `redis_url` to configure the `Redix` client, use `redix_config`
-  to pass any of the [configuration options available to Redix](https://hexdocs.pm/redix/Redix.html#start_link/1-options):
-
-  ```elixir
-  config :redis_mutex,
-    redix_config: [
-      host: "example.com",
-      port: 9999,
-      ssl: true,
-      socket_opts: [
-        customize_hostname_check: [
-          match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-        ]
-      ]
-    ]
-
-  Only one of `:redix_config` and `:redis_url` can be used at a time.
+  An Elixir library for using Redis locks.
   """
+  @type socket_options :: [
+          customize_hostname_check: [
+            match_fun: function()
+          ]
+        ]
 
+  @type connection_options :: [
+          host: String.t(),
+          port: non_neg_integer(),
+          ssl: boolean(),
+          socket_opts: socket_options()
+        ]
+
+  @type start_options :: {:redis_url, String.t()} | {:redix_config, connection_options()}
+
+  @type using_options :: {:otp_app, atom()}
+
+  @default_lock_module RedisMutex.Lock
+
+  @spec __using__([using_options()]) :: term()
   defmacro __using__(opts) do
+    {otp_app, otp_app_opts} = Keyword.pop(opts, :otp_app)
+
     lock_module =
-      if Keyword.keyword?(opts),
-        do:
-          Keyword.get(
-            opts,
-            :lock_module,
-            Application.get_env(:redis_mutex, :lock_module, RedisMutex.Lock)
-          )
+      otp_app_opts[:lock_module] ||
+        Application.get_env(otp_app, __MODULE__)[:lock_module] ||
+        @default_lock_module
 
     quote do
       import unquote(lock_module), warn: false
+
+      def child_spec(opts \\ []) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]},
+          type: :supervisor
+        }
+      end
+
+      @spec start_link([RedisMutex.start_options()]) :: Supervisor.on_start()
+      def start_link(opts \\ []) do
+        app = unquote(otp_app)
+        the_lock_module = unquote(lock_module)
+
+        RedisMutex.Supervisor.start_link(
+          app,
+          __MODULE__,
+          the_lock_module,
+          opts ++ [name: RedisMutex]
+        )
+      end
     end
   end
 end

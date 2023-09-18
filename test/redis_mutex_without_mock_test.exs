@@ -1,20 +1,55 @@
 defmodule RedisMutexWithoutMockTest do
-  use ExUnit.Case
-  use RedisMutex, lock_module: RedisMutex.Lock
-  doctest RedisMutex
+  use ExUnit.Case, async: false
 
-  @moduletag :skip
   @moduletag :redis_dependent
 
-  describe "with_lock" do
+  defmodule RedisMutexUser do
+    use RedisMutex, otp_app: :redis_mutex, lock_module: RedisMutex.Lock
+
+    def two_threads_lock do
+      with_lock("two_threads_lock") do
+        start_time = DateTime.utc_now()
+        end_time = DateTime.utc_now()
+        {start_time, end_time}
+      end
+    end
+
+    def two_threads_one_loses_lock do
+      try do
+        with_lock("two_threads_one_loses_lock", 500) do
+          start_time = DateTime.utc_now()
+          :timer.sleep(1000)
+          end_time = DateTime.utc_now()
+          {start_time, end_time}
+        end
+      rescue
+        RedisMutex.Error -> :timed_out
+      end
+    end
+
+    def long_running_task do
+      with_lock("two_threads_lock_expires", 10_000, 250) do
+        :timer.sleep(10_000)
+      end
+    end
+
+    def quick_task do
+      with_lock("two_threads_lock_expires", 1000, 500) do
+        "I RAN!!!"
+      end
+    end
+  end
+
+  describe "with_lock/4" do
+    setup do
+      start_supervised(RedisMutexUser, [])
+      :ok
+    end
+
     test "works with two tasks contending for the same lock, making one run after the other" do
       res =
         run_in_parallel(2, 5000, fn ->
-          with_lock("two_threads_lock") do
-            start_time = DateTime.utc_now()
-            end_time = DateTime.utc_now()
-            {start_time, end_time}
-          end
+          RedisMutexUser.two_threads_lock()
         end)
 
       [start_1, end_1, start_2, end_2] =
@@ -37,18 +72,7 @@ defmodule RedisMutexWithoutMockTest do
     test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
       res =
         run_in_parallel(2, 5000, fn ->
-          try do
-            # Make sure this doesn't conflict with other tests in this file
-            # because everything gets run async and they could step on each other
-            with_lock("two_threads_one_loses_lock", 500) do
-              start_time = DateTime.utc_now()
-              :timer.sleep(1000)
-              end_time = DateTime.utc_now()
-              {start_time, end_time}
-            end
-          rescue
-            RedisMutex.Error -> :timed_out
-          end
+          RedisMutexUser.two_threads_one_loses_lock()
         end)
 
       [result_1, result_2] =
@@ -80,19 +104,14 @@ defmodule RedisMutexWithoutMockTest do
       # Kick off a task that will run for a long time, holding the lock
       t =
         Task.async(fn ->
-          with_lock("two_threads_lock_expires", 10_000, 250) do
-            :timer.sleep(10_000)
-          end
+          RedisMutexUser.long_running_task()
         end)
 
       # let enough time pass so that the lock expire
       Task.yield(t, 1000)
 
       # try to run another task and see if it gets the lock
-      results =
-        with_lock("two_threads_lock_expires", 1000, 500) do
-          "I RAN!!!"
-        end
+      results = RedisMutexUser.quick_task()
 
       Task.shutdown(t, :brutal_kill)
 

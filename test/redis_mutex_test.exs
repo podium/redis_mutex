@@ -1,18 +1,49 @@
 defmodule RedisMutexTest do
-  use ExUnit.Case
-  use RedisMutex
-  doctest RedisMutex
+  use ExUnit.Case, async: true
 
-  @moduletag :skip
+  import Mox
 
-  describe "with_lock" do
-    test "with_lock returns value of the contained logic" do
-      possum_lodge_motto =
-        with_lock("red_green") do
-          "I'm a man, but I can change. If I have to. I guess."
-        end
+  alias RedisMutex.LockMock
 
-      assert possum_lodge_motto == "I'm a man, but I can change. If I have to. I guess."
+  setup :verify_on_exit!
+
+  defmodule RedisMutexUser do
+    use RedisMutex, otp_app: :redis_mutex, lock_module: RedisMutex.LockMock
+
+    def two_plus_two(key, timeout, expiry) do
+      with_lock(key, timeout, expiry) do
+        2 + 2
+      end
+    end
+  end
+
+  setup do
+    stub(LockMock, :child_spec, fn _opts -> :ignore end)
+    stub(LockMock, :start_link, fn _opts -> :ignore end)
+    start_supervised(RedisMutexUser, [])
+    :ok
+  end
+
+  describe "__using__/1" do
+    test "should use the lock module specified" do
+      my_key = "my-key"
+      my_timeout = 200
+      my_expiry = 2_000
+
+      expect(LockMock, :with_lock, fn key, timeout, expiry, do_clause ->
+        assert key == my_key
+        assert timeout == my_timeout
+        assert expiry == my_expiry
+
+        [do: block_value] =
+          quote do
+            unquote(do_clause)
+          end
+
+        block_value
+      end)
+
+      assert 4 == RedisMutexUser.two_plus_two(my_key, my_timeout, my_expiry)
     end
   end
 end

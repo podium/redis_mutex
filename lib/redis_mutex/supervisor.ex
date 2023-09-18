@@ -11,7 +11,7 @@ defmodule RedisMutex.Supervisor do
           otp_app: atom(),
           lock_module: module(),
           redis_url: String.t(),
-          redix_config: RedisMutexV2.connection_options()
+          redix_config: RedisMutex.connection_options()
         ]
 
   @spec start_link(atom(), module(), module(), [start_options()]) :: Supervisor.on_start()

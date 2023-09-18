@@ -9,17 +9,17 @@ defmodule RedisMutex.SupervisorTest do
     test "should start children with the options provided" do
       otp_app = :my_app
       module = RedisMutex.SupervisorTest.MyModule
-      lock_module = RedisMutex.LockV2Mock
+      lock_module = RedisMutex.LockMock
 
       opts = [
         redis_url: "redis://localhost:6379",
-        name: RedisMutexV2
+        name: RedisMutex
       ]
 
-      expect(RedisMutex.LockV2Mock, :child_spec, fn spec_opts ->
+      expect(RedisMutex.LockMock, :child_spec, fn spec_opts ->
         %{
-          id: RedisMutex.LockV2Mock,
-          start: {RedisMutex.LockV2Mock, :start_link, [spec_opts]},
+          id: RedisMutex.LockMock,
+          start: {RedisMutex.LockMock, :start_link, [spec_opts]},
           type: :worker
         }
       end)
@@ -28,13 +28,13 @@ defmodule RedisMutex.SupervisorTest do
       assert strategy.strategy == :one_for_one
 
       assert %{
-               id: RedisMutex.LockV2Mock,
+               id: RedisMutex.LockMock,
                type: :worker,
-               start: {RedisMutex.LockV2Mock, :start_link, start_opts}
+               start: {RedisMutex.LockMock, :start_link, start_opts}
              } = child
 
       assert start_opts == [
-               [[redis_url: "redis://localhost:6379", name: RedisMutexV2]]
+               [[redis_url: "redis://localhost:6379", name: RedisMutex]]
              ]
     end
   end
