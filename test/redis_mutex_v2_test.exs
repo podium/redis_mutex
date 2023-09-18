@@ -18,6 +18,7 @@ defmodule RedisMutexV2Test do
   end
 
   setup do
+    stub(LockV2Mock, :child_spec, fn _opts -> :ignore end)
     stub(LockV2Mock, :start_link, fn _opts -> :ignore end)
     start_supervised(RedisMutexUser, [])
     :ok
