@@ -3,7 +3,7 @@ defmodule RedisMutex.ApplicationTest do
   Tests various configuration scenarios
   """
 
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   doctest RedisMutex
 
   setup do

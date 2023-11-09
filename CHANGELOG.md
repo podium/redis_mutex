@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.6.0 (2023-11-08)
+
+### Changed
+- support for Elixir 1.15. Bump some package dependencies
+- change to use Uniq lib rather than the unmaintained elixir_uuid
+
 ## 0.5.0 (2023-08-16)
 
 ### Changed

@@ -55,7 +55,7 @@ defmodule RedisMutex.Lock do
       key = unquote(key)
       timeout = unquote(timeout)
       expiry = unquote(expiry)
-      uuid = UUID.uuid1()
+      uuid = Uniq.UUID.uuid1()
 
       RedisMutex.Lock.take_lock(key, uuid, timeout, expiry)
 
