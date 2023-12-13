@@ -7,10 +7,8 @@ defmodule RedisMutex.ApplicationTest do
   doctest RedisMutex
 
   setup do
-    on_exit(fn ->
-      Application.put_env(:redis_mutex, :redis_url, nil)
-      Application.put_env(:redis_mutex, :redix_config, nil)
-    end)
+    Application.put_env(:redis_mutex, :redis_url, nil)
+    Application.put_env(:redis_mutex, :redix_config, nil)
   end
 
   describe "child_spec configuration" do
