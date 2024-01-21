@@ -36,19 +36,19 @@ if Code.ensure_loaded?(Redix) do
       }
     end
 
-    @spec start_link(start_options()) :: :ignore | {:error, any} | {:ok, pid}
+    @spec start_link(RedisMutex.start_options()) :: :ignore | {:error, any} | {:ok, pid}
     def start_link(start_options \\ []) do
       {redis_url, redix_opts} = Keyword.pop(start_options, :redis_url)
       {name, redix_opts} = Keyword.pop(redix_opts, :name)
 
       case redis_url do
+        redis_url when is_binary(redis_url) ->
+          Redix.start_link(redis_url, name: name, sync_connect: true)
+
         nil ->
           [name: name, sync_connect: true]
           |> Keyword.merge(redix_opts)
           |> Redix.start_link()
-
-        redis_url when is_binary(redis_url) ->
-          Redix.start_link(redis_url, name: name, sync_connect: true)
       end
     end
 
