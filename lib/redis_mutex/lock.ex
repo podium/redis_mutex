@@ -16,6 +16,8 @@ if Code.ensure_loaded?(Redix) do
 
     @type start_options :: String.t() | Keyword.t()
 
+    @name RedisMutex
+
     @callback child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
 
     @callback start_link(start_options :: start_options()) :: {:ok, pid()} | {:error, any()}
@@ -39,14 +41,13 @@ if Code.ensure_loaded?(Redix) do
     @spec start_link(RedisMutex.start_options()) :: :ignore | {:error, any} | {:ok, pid}
     def start_link(start_options \\ []) do
       {redis_url, redix_opts} = Keyword.pop(start_options, :redis_url)
-      {name, redix_opts} = Keyword.pop(redix_opts, :name)
 
       case redis_url do
         redis_url when is_binary(redis_url) ->
-          Redix.start_link(redis_url, name: name, sync_connect: true)
+          Redix.start_link(redis_url, name: @name, sync_connect: true)
 
         nil ->
-          [name: name, sync_connect: true]
+          [name: @name, sync_connect: true]
           |> Keyword.merge(redix_opts)
           |> Redix.start_link()
       end
@@ -105,7 +106,7 @@ if Code.ensure_loaded?(Redix) do
     returns `false`.
     """
     def lock(key, value, expiry) do
-      case Redix.command!(client(), ["SET", key, value, "NX", "PX", "#{expiry}"]) do
+      case Redix.command!(@name, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
         "OK" -> true
         nil -> false
       end
@@ -115,12 +116,10 @@ if Code.ensure_loaded?(Redix) do
     This function takes in the key/value pair that are to be released in Redis
     """
     def unlock(key, value) do
-      case Redix.command!(client(), ["EVAL", @unlock_script, 1, key, value]) do
+      case Redix.command!(@name, ["EVAL", @unlock_script, 1, key, value]) do
         1 -> true
         0 -> false
       end
     end
-
-    defp client, do: Process.whereis(RedisMutex)
   end
 end

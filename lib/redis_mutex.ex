@@ -14,7 +14,6 @@ defmodule RedisMutex do
           backoff_initial: non_neg_integer(),
           backoff_max: timeout(),
           ssl: boolean(),
-          name: atom(),
           socket_opts: list(term()),
           hibernate_after: non_neg_integer(),
           spawn_opt: keyword(),
@@ -41,11 +40,10 @@ defmodule RedisMutex do
     lock_module = lock_module(opts)
 
     options = Application.get_env(:redis_mutex, :redis_options, [])
-    name = Keyword.get(options, :name, RedisMutex)
 
     RedisMutex.Supervisor.start_link(
       lock_module,
-      [name: name] ++ options
+      options
     )
   end
 

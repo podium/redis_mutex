@@ -4,10 +4,7 @@ defmodule RedisMutex.Supervisor do
   """
   use Supervisor
 
-  @type start_options :: [
-          name: atom(),
-          redis_url: String.t() | RedisMutex.connection_options()
-        ]
+  @type start_options :: {:redis_url, String.t()} | RedisMutex.connection_options()
 
   @spec start_link(module(), start_options()) :: Supervisor.on_start()
   def start_link(lock_module, opts) when is_atom(lock_module) and is_list(opts) do
