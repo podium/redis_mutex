@@ -8,7 +8,7 @@ defmodule RedisMutexTest do
   setup :verify_on_exit!
 
   defmodule RedisMutexUser do
-    use RedisMutex, otp_app: :redis_mutex, lock_module: RedisMutex.LockMock
+    use RedisMutex
 
     def two_plus_two(key, timeout, expiry) do
       with_lock(key, timeout, expiry) do
@@ -18,9 +18,7 @@ defmodule RedisMutexTest do
   end
 
   setup do
-    stub(LockMock, :child_spec, fn _opts -> :ignore end)
-    stub(LockMock, :start_link, fn _opts -> :ignore end)
-    start_supervised(RedisMutexUser, [])
+    start_supervised(RedisMutex)
     :ok
   end
 

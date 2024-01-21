@@ -2,57 +2,76 @@ defmodule RedisMutex do
   @moduledoc """
   An Elixir library for using Redis locks.
   """
-  @type socket_options :: [
-          customize_hostname_check: [
-            match_fun: function()
-          ]
-        ]
-
   @type connection_options :: [
           host: String.t(),
           port: non_neg_integer(),
+          database: String.t() | non_neg_integer(),
+          username: String.t(),
+          password: Redix.password(),
+          timeout: timeout(),
+          sync_connect: boolean(),
+          exit_on_disconnection: boolean(),
+          backoff_initial: non_neg_integer(),
+          backoff_max: timeout(),
           ssl: boolean(),
-          socket_opts: socket_options()
+          name: atom(),
+          socket_opts: list(term()),
+          hibernate_after: non_neg_integer(),
+          spawn_opt: keyword(),
+          debug: keyword(),
+          sentinel: keyword()
         ]
 
-  @type start_options :: {:redis_url, String.t()} | {:redix_config, connection_options()}
-
-  @type using_options :: {:otp_app, atom()}
+  @type start_options :: {:redis_url, String.t()} | connection_options()
 
   @default_lock_module RedisMutex.Lock
 
-  @spec __using__([using_options()]) :: term()
-  defmacro __using__(opts) do
-    {otp_app, otp_app_opts} = Keyword.pop(opts, :otp_app)
+  def child_spec(opts \\ []) do
+    args = child_spec_args(opts)
 
-    lock_module =
-      otp_app_opts[:lock_module] ||
-        Application.get_env(otp_app, __MODULE__)[:lock_module] ||
-        @default_lock_module
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [args]},
+      type: :supervisor
+    }
+  end
+
+  @spec start_link(Keyword.t()) :: Supervisor.on_start()
+  def start_link(opts) do
+    lock_module = lock_module(opts)
+
+    options = Application.get_env(:redis_mutex, :redis_options, [])
+    name = Keyword.get(options, :name, RedisMutex)
+
+    RedisMutex.Supervisor.start_link(
+      lock_module,
+      [name: name] ++ options
+    )
+  end
+
+  defmacro __using__(opts \\ []) do
+    lock_module = lock_module(opts)
 
     quote do
       import unquote(lock_module), warn: false
+    end
+  end
 
-      def child_spec(opts \\ []) do
-        %{
-          id: __MODULE__,
-          start: {__MODULE__, :start_link, [opts]},
-          type: :supervisor
-        }
-      end
+  defp child_spec_args(opts) do
+    if Keyword.equal?([], opts) do
+      nil
+    else
+      opts
+    end
+  end
 
-      @spec start_link([RedisMutex.start_options()]) :: Supervisor.on_start()
-      def start_link(opts \\ []) do
-        app = unquote(otp_app)
-        the_lock_module = unquote(lock_module)
+  defp lock_module(opts) do
+    case opts[:lock_module] do
+      nil ->
+        Application.get_env(:redis_mutex, :lock_module, @default_lock_module)
 
-        RedisMutex.Supervisor.start_link(
-          app,
-          __MODULE__,
-          the_lock_module,
-          opts ++ [name: RedisMutex]
-        )
-      end
+      _ ->
+        opts[:lock_module]
     end
   end
 end

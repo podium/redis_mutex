@@ -7,8 +7,6 @@ defmodule RedisMutex.SupervisorTest do
 
   describe "init/1" do
     test "should start children with the options provided" do
-      otp_app = :my_app
-      module = RedisMutex.SupervisorTest.MyModule
       lock_module = RedisMutex.LockMock
 
       opts = [
@@ -24,7 +22,7 @@ defmodule RedisMutex.SupervisorTest do
         }
       end)
 
-      assert {:ok, {strategy, [child]}} = Supervisor.init({otp_app, module, lock_module, opts})
+      assert {:ok, {strategy, [child]}} = Supervisor.init({lock_module, opts})
       assert strategy.strategy == :one_for_one
 
       assert %{

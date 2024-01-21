@@ -4,7 +4,7 @@ defmodule RedisMutexWithoutMockTest do
   @moduletag :redis_dependent
 
   defmodule RedisMutexUser do
-    use RedisMutex, otp_app: :redis_mutex, lock_module: RedisMutex.Lock
+    use RedisMutex, lock_module: RedisMutex.Lock
 
     def two_threads_lock do
       with_lock("two_threads_lock") do
@@ -42,7 +42,7 @@ defmodule RedisMutexWithoutMockTest do
 
   describe "with_lock/4" do
     setup do
-      start_supervised(RedisMutexUser, [])
+      start_supervised({RedisMutex, lock_module: RedisMutex.Lock})
       :ok
     end
 

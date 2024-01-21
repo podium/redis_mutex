@@ -1,7 +1,9 @@
 import Config
 
-config :redis_mutex, redis_url: "redis://localhost:6379"
-
-config :redis_mutex, RedisMutexTest.RedisMutexUser,
+config :redis_mutex,
   lock_module: RedisMutex.LockMock,
-  redis_url: "redis://localhost:6379"
+  redis_options: [
+    name: RedisMutex,
+    host: "localhost",
+    port: 6379
+  ]
