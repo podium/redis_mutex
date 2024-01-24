@@ -22,6 +22,10 @@ if Code.ensure_loaded?(Redix) do
 
     @callback start_link(start_options :: start_options()) :: {:ok, pid()} | {:error, any()}
 
+    @callback with_lock(key :: String.t(), do: clause :: term()) :: any()
+
+    @callback with_lock(key :: String.t(), timeout :: integer(), do: clause :: term()) :: any()
+
     @callback with_lock(key :: String.t(), timeout :: integer(), expiry :: integer(),
                 do: clause :: term()
               ) ::
