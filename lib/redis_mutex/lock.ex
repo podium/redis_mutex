@@ -84,8 +84,8 @@ if Code.ensure_loaded?(Redix) do
     def take_lock(
           key,
           uuid,
-          timeout \\ @default_timeout,
-          expiry \\ @default_expiry,
+          timeout,
+          expiry,
           finish \\ nil
         )
 
