@@ -4,15 +4,13 @@ defmodule RedisMutex.Supervisor do
   """
   use Supervisor
 
-  @type start_options :: {:redis_url, String.t()} | RedisMutex.connection_options()
-
-  @spec start_link(module(), start_options()) :: Supervisor.on_start()
+  @spec start_link(module(), RedisMutex.start_options()) :: Supervisor.on_start()
   def start_link(lock_module, opts) when is_atom(lock_module) and is_list(opts) do
     Supervisor.start_link(__MODULE__, {lock_module, opts}, name: __MODULE__)
   end
 
   @impl Supervisor
-  @spec init({module(), start_options()}) ::
+  @spec init({module(), RedisMutex.start_options()}) ::
           {:ok, {Supervisor.sup_flags(), [Supervisor.child_spec()]}}
   def init({lock_module, opts}) do
     children = [

@@ -14,13 +14,12 @@ if Code.ensure_loaded?(Redix) do
     end
     """
 
-    @type start_options :: String.t() | Keyword.t()
-
     @name RedisMutex
 
     @callback child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
 
-    @callback start_link(start_options :: start_options()) :: {:ok, pid()} | {:error, any()}
+    @callback start_link(start_options :: RedisMutex.start_options()) ::
+                {:ok, pid()} | {:error, any()}
 
     @callback with_lock(key :: String.t(), do: clause :: term()) :: any()
 
@@ -76,7 +75,9 @@ if Code.ensure_loaded?(Redix) do
     end
 
     @doc """
-    This function takes in a key, unique string, and a timeout in milliseconds.
+    This function takes in a key, which should be a unique string,
+    an optional timeout in milliseconds and an optional expiry,
+    also in milliseconds.
     It will call itself recursively until it is able to set a lock
     or the timeout expires.
     """
@@ -104,10 +105,11 @@ if Code.ensure_loaded?(Redix) do
     end
 
     @doc """
-    This function takes in a key and a unique identifier to set it in Redis.
+    This function takes in a key, a unique identifier to set in Redis and an expiry.
     This is how a lock is identified in Redis. If a key/value pair is able to be
     set in Redis, `lock` returns `true`. If it isn't able to set in Redis, `lock`
     returns `false`.
+    It also takes an expiry.
     """
     def lock(key, value, expiry) do
       case Redix.command!(@name, ["SET", key, value, "NX", "PX", "#{expiry}"]) do

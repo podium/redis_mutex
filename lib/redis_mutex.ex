@@ -2,6 +2,7 @@ defmodule RedisMutex do
   @moduledoc """
   An Elixir library for using Redis locks.
   """
+
   @type connection_options :: [
           host: String.t(),
           port: non_neg_integer(),
