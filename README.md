@@ -14,7 +14,7 @@ to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:redis_mutex, "~> 0.4.0"}
+    {:redis_mutex, "~> 1.0"}
   ]
 end
 ```
