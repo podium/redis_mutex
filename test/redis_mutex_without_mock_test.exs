@@ -15,16 +15,14 @@ defmodule RedisMutexWithoutMockTest do
     end
 
     def two_threads_one_loses_lock do
-      try do
-        with_lock("two_threads_one_loses_lock", 500) do
-          start_time = DateTime.utc_now()
-          :timer.sleep(1000)
-          end_time = DateTime.utc_now()
-          {start_time, end_time}
-        end
-      rescue
-        RedisMutex.Error -> :timed_out
+      with_lock("two_threads_one_loses_lock", 500) do
+        start_time = DateTime.utc_now()
+        :timer.sleep(1000)
+        end_time = DateTime.utc_now()
+        {start_time, end_time}
       end
+    rescue
+      RedisMutex.Error -> :timed_out
     end
 
     def long_running_task do
