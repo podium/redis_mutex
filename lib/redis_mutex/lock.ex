@@ -30,7 +30,7 @@ if Code.ensure_loaded?(Redix) do
               ) ::
                 any()
 
-    @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
+    @spec child_spec(RedisMutex.start_options()) :: Supervisor.child_spec()
     def child_spec(opts) do
       %{
         id: __MODULE__,
@@ -81,6 +81,13 @@ if Code.ensure_loaded?(Redix) do
     It will call itself recursively until it is able to set a lock
     or the timeout expires.
     """
+    @spec take_lock(
+            key :: String.t(),
+            uuid :: String.t(),
+            timeout :: non_neg_integer(),
+            expiry :: non_neg_integer(),
+            finish :: DateTime.t()
+          ) :: boolean()
     def take_lock(
           key,
           uuid,
@@ -111,6 +118,7 @@ if Code.ensure_loaded?(Redix) do
     returns `false`.
     It also takes an expiry.
     """
+    @spec lock(key :: String.t(), value :: String.t(), expiry :: non_neg_integer()) :: boolean()
     def lock(key, value, expiry) do
       case Redix.command!(@name, ["SET", key, value, "NX", "PX", "#{expiry}"]) do
         "OK" -> true
@@ -121,6 +129,7 @@ if Code.ensure_loaded?(Redix) do
     @doc """
     This function takes in the key/value pair that are to be released in Redis
     """
+    @spec unlock(key :: String.t(), value :: String.t()) :: boolean()
     def unlock(key, value) do
       case Redix.command!(@name, ["EVAL", @unlock_script, 1, key, value]) do
         1 -> true
