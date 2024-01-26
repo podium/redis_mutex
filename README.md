@@ -29,7 +29,7 @@ Add `RedisMutex` to your application's supervision tree.
 ```elixir
   @impl Application
   def start(_type, _args) do
-    children = [other_children() | RedisMutex]
+    children = other_children() ++ [RedisMutex]
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
   end
 ```
@@ -44,7 +44,7 @@ application's supervision tree in test.
       if Mix.env() == :test do
         other_children()
       else
-        [other_children() | RedisMutex]
+        other_children() ++ [RedisMutex]
       end
 
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
