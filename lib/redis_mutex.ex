@@ -26,6 +26,7 @@ defmodule RedisMutex do
 
   @default_lock_module RedisMutex.Lock
 
+  @spec child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
   def child_spec(opts \\ []) do
     args = child_spec_args(opts)
 
@@ -56,6 +57,7 @@ defmodule RedisMutex do
     end
   end
 
+  @spec child_spec_args(opts :: Keyword.t()) :: Keyword.t()
   defp child_spec_args(opts) do
     if Keyword.equal?([], opts) do
       nil
@@ -64,6 +66,7 @@ defmodule RedisMutex do
     end
   end
 
+  @spec lock_module(opts :: Keyword.t()) :: module()
   defp lock_module(opts) do
     case opts[:lock_module] do
       nil ->
