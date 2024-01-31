@@ -1,47 +1,147 @@
 defmodule RedisMutexTest do
   use ExUnit.Case, async: true
 
-  import Mox
-
-  alias RedisMutex.LockMock
-
-  setup :verify_on_exit!
+  @moduletag :redis_dependent
 
   defmodule RedisMutexUser do
-    use RedisMutex
+    def two_threads_lock do
+      opts = [name: RedisMutex]
 
-    def two_plus_two(key, timeout, expiry) do
-      with_lock(key, timeout, expiry) do
-        2 + 2
+      RedisMutex.with_lock("two_threads_lock", opts, fn ->
+        start_time = DateTime.utc_now()
+        end_time = DateTime.utc_now()
+        {start_time, end_time}
+      end)
+    end
+
+    def two_threads_one_loses_lock do
+      opts = [name: RedisMutex, timeout: 500]
+
+      RedisMutex.with_lock("two_threads_one_loses_lock", opts, fn ->
+        start_time = DateTime.utc_now()
+        :timer.sleep(1000)
+        end_time = DateTime.utc_now()
+        {start_time, end_time}
+      end)
+    rescue
+      RedisMutex.Error -> :timed_out
+    end
+
+    def long_running_task do
+      opts = [name: RedisMutex, timeout: 10_000, expiry: 250]
+
+      RedisMutex.with_lock("two_threads_lock_expires", opts, fn ->
+        :timer.sleep(10_000)
+      end)
+    end
+
+    def quick_task do
+      opts = [name: RedisMutex, timeout: 1000, expiry: 500]
+
+      RedisMutex.with_lock("two_threads_lock_expires", opts, fn ->
+        "I RAN!!!"
+      end)
+    end
+  end
+
+  describe "start_link/1" do
+    test "should start with just the module name" do
+      assert {:ok, _pid} = start_supervised(RedisMutex)
+    end
+
+    test "should start with options" do
+      assert {:ok, _pid} = start_supervised({RedisMutex, name: MyApp.RedisMutex})
+    end
+  end
+
+  describe "with_lock/4" do
+    setup do
+      start_supervised({RedisMutex, name: RedisMutex})
+      :ok
+    end
+
+    test "works with two tasks contending for the same lock, making one run after the other" do
+      res =
+        run_in_parallel(2, 5000, fn ->
+          RedisMutexUser.two_threads_lock()
+        end)
+
+      [start_1, end_1, start_2, end_2] =
+        Enum.flat_map(res, fn result ->
+          case result do
+            {:ok, {start_time, end_time}} -> [start_time, end_time]
+            {:error, e} -> raise e
+          end
+        end)
+
+      assert DateTime.compare(start_1, end_1) == :lt
+      assert DateTime.compare(start_2, end_2) == :lt
+
+      # one ran before the other, regardless of which
+      assert (DateTime.compare(start_1, start_2) == :lt and DateTime.compare(end_1, end_2) == :lt) or
+               (DateTime.compare(start_2, start_1) == :lt and
+                  DateTime.compare(end_2, end_1) == :lt)
+    end
+
+    test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
+      res =
+        run_in_parallel(2, 5000, fn ->
+          RedisMutexUser.two_threads_one_loses_lock()
+        end)
+
+      [result_1, result_2] =
+        Enum.map(res, fn result ->
+          case result do
+            {:ok, {start_time, end_time}} -> [start_time, end_time]
+            error -> error
+          end
+        end)
+
+      # make sure one task failed and one task succeeded, regardless of which
+      cond do
+        is_tuple(result_1) ->
+          assert {:ok, :timed_out} == result_1
+          [start_time, end_time] = result_2
+          assert DateTime.compare(start_time, end_time) == :lt
+
+        is_tuple(result_2) ->
+          assert {:ok, :timed_out} == result_2
+          [start_time, end_time] = result_1
+          assert DateTime.compare(start_time, end_time) == :lt
+
+        true ->
+          flunk("Both tasks ran, which means our lock timeout did not work!")
       end
     end
-  end
 
-  setup do
-    start_supervised(RedisMutex)
-    :ok
-  end
+    test "expires the lock after the given time" do
+      # Kick off a task that will run for a long time, holding the lock
+      t =
+        Task.async(fn ->
+          RedisMutexUser.long_running_task()
+        end)
 
-  describe "__using__/1" do
-    test "should use the lock module specified" do
-      my_key = "my-key"
-      my_timeout = 200
-      my_expiry = 2_000
+      # let enough time pass so that the lock expire
+      Task.yield(t, 1000)
 
-      expect(LockMock, :with_lock, fn key, timeout, expiry, do_clause ->
-        assert key == my_key
-        assert timeout == my_timeout
-        assert expiry == my_expiry
+      # try to run another task and see if it gets the lock
+      results = RedisMutexUser.quick_task()
 
-        [do: block_value] =
-          quote do
-            unquote(do_clause)
-          end
+      Task.shutdown(t, :brutal_kill)
 
-        block_value
-      end)
-
-      assert 4 == RedisMutexUser.two_plus_two(my_key, my_timeout, my_expiry)
+      assert results == "I RAN!!!"
     end
+  end
+
+  defp run_in_parallel(concurrency, timeout, content) do
+    1..concurrency
+    |> Enum.map(fn _ ->
+      Task.async(content)
+    end)
+    |> Task.yield_many(timeout)
+    |> Enum.map(fn {task, res} ->
+      # Shut down the tasks that did not reply nor exit
+      res || Task.shutdown(task, :brutal_kill)
+    end)
   end
 end
