@@ -2,6 +2,7 @@ defmodule RedisMutex do
   @moduledoc """
   An Elixir library for using Redis locks.
   """
+
   @type connection_options :: [
           host: String.t(),
           port: non_neg_integer(),
@@ -41,6 +42,11 @@ defmodule RedisMutex do
 
   @callback with_lock(key :: String.t(), opts :: lock_opts(), fun :: (-> any())) :: any()
 
+  @doc """
+  The specification for starting a connection with Redis. Can include any of the
+  `start_options`. Can also include a `:name`. When a name is provided, this name is
+  used when establishing a connection with Redis.
+  """
   @spec child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
   def child_spec(opts \\ []) do
     %{
@@ -52,12 +58,43 @@ defmodule RedisMutex do
     }
   end
 
+  @doc """
+  Starts a process as part of a supervision tree.
+
+  A `:name` provided as part of the start options is used to retrieve
+  configuration options. Any other options provided as part of the `start_options` override
+  options provided in a configuration. When no `:name` is provided, `RedisMutex` is
+  the name used to retrieve configuration options.
+  """
   @spec start_link(start_options()) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(start_options \\ []) do
     {redis_url, redis_options} = set_options(start_options)
     connect_to_redis(redis_url, redis_options)
   end
 
+  @doc """
+  Provides a mutex for performing a function.
+
+  The lock is defined by the key argument. When the key is already taken, the function will not be
+  performed. When the key is not already in use, the function argument is run.
+
+  The key should be unique to the operation being performed.
+
+  The function provided should be a zero-arity function.
+
+   ## Options
+
+    * `:name` - the name of the Redis connection to use when performing the lock.
+      Defaults to `RedisMutex`. If you have provided a different name for the connection
+      during initiation of the connection, you must provide that name in the options for
+      `with_lock/3`.
+
+    * `:timeout` - how long `RedisMutex` will try before abandoning the attempt to gain the
+    lock. Timeout is in milliseconds. Defaults to 4_000.
+
+    * `:expiry` - how long the lock will be held before expiring. Expiry is in milliseconds.
+    Defaults to 2_000.
+  """
   @spec with_lock(key :: String.t(), opts :: lock_opts(), fun :: (-> any())) :: any()
   def with_lock(key, opts \\ [], fun) do
     RedisMutex.Lock.with_lock(key, opts, fun)
@@ -86,6 +123,8 @@ defmodule RedisMutex do
     {redis_url, redis_options}
   end
 
+  @spec connect_to_redis(redis_url :: String.t() | nil, Keyword.t()) ::
+          {:ok, pid()} | :ignore | {:error, term()}
   defp connect_to_redis(redis_url, redis_options) when is_binary(redis_url) do
     Redix.start_link(redis_url, redis_options)
   end
