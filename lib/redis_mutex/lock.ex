@@ -32,8 +32,8 @@ defmodule RedisMutex.Lock do
           uuid :: String.t(),
           timeout :: non_neg_integer(),
           expiry :: non_neg_integer(),
-          finish :: DateTime.t()
-        ) :: boolean()
+          finish :: DateTime.t() | nil
+        ) :: nil
   defp take_lock(
          key,
          name,
