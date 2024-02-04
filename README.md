@@ -19,6 +19,32 @@ def deps do
 end
 ```
 
+## Upgrading from version 0.X to version 1.X
+
+Version 1.0.0 of `RedisMutex` changes how `RedisMutex` is started and how `with_lock` is used. Key changes include:
+
+1. `RedisMutex` no longer runs as its own application.
+   1. If you need or want to set up a Redix connection specifically for `RedisMutex`, it must be added to your application's supervision tree.
+   2. If you want to re-use an existing Redis connection via Redix, it does not need adding to your application's supervision tree.
+2. Configuration for `RedisMutex` (in your application's `config` files) has changed.
+3. Using `RedisMutex`'s `with_lock` is no longer done via `use RedisMutex`. Instead, your application must call
+   the function `RedisMutex.with_lock/3`.
+4. The code you want to execute in `RedisMutex.with_lock/3` is passed in a zero-arity function instead of in a `do` 
+   block.
+5. Timeout and expiry options for `RedisMutex.with_lock/3` are optionally provided in a keyword list as the last
+   argument to `RedisMutex.with_lock/3`.
+6. Callbacks are defined for `RedisMutex`'s functions to allow for doubles to be used in testing.
+
+In order to upgrade to version 1.X, you will need to:
+1. Add `RedisMutex` to your application's supervision tree unless you are using an existing Redis connection via Redix.
+2. Update your config files to match the new configuration options if you are adding `RedisMutex` to the supervision tree.
+3. Remove use of `use RedisMutex` in favor of `RedisMutex.with_lock/3`.
+4. Replace the `do` block with a zero-arity function in your calls to `RedisMutex.with_lock/3`.
+5. Move any timeout or expiry arguments into a keyword list as the final argument to `RedisMutex.with_lock/3`.
+6. If you are not running Redis when you run your unit tests, update your test suite to use a double 
+   that handles `RedisMutex`'s updated functions.
+
+Please see the [Usage](#usage) section for more details.
 
 ## Usage
 
@@ -156,7 +182,8 @@ config :redis_mutex, MyApp.Mutex, redis_url: System.get_env("REDIS_URL")
 ### Using `RedisMutex`
 
 Call `RedisMutex`'s `with_lock/3` function to lock critical parts of your code. `with_lock/3` must be
-provided with `key` argument and a zero-arity function to call.
+provided with a `key` argument and a zero-arity function argument to call. This function will be called
+if and when the lock is acquired.
 
 ```elixir
 defmodule PossumLodge do
@@ -183,9 +210,11 @@ defmodule PossumLodge do
   @mutex_options [name: MyApp.Mutex, timeout: 500, expiry: 1_000]
   
   def get_oauth do
-    @redis_mutex.with_lock("my_key", fn ->
-      "Quando omni flunkus moritati"
-    end, @mutex_options)
+    @redis_mutex.with_lock(
+      "my_key", 
+      fn -> "Quando omni flunkus moritati" end,
+      @mutex_options
+      )
   end
 end
 ```
