@@ -7,22 +7,30 @@ defmodule RedisMutexTest do
     def two_threads_lock do
       opts = [name: RedisMutex]
 
-      RedisMutex.with_lock("two_threads_lock", opts, fn ->
-        start_time = DateTime.utc_now()
-        end_time = DateTime.utc_now()
-        {start_time, end_time}
-      end)
+      RedisMutex.with_lock(
+        "two_threads_lock",
+        fn ->
+          start_time = DateTime.utc_now()
+          end_time = DateTime.utc_now()
+          {start_time, end_time}
+        end,
+        opts
+      )
     end
 
     def two_threads_one_loses_lock do
       opts = [name: RedisMutex, timeout: 500]
 
-      RedisMutex.with_lock("two_threads_one_loses_lock", opts, fn ->
-        start_time = DateTime.utc_now()
-        :timer.sleep(1000)
-        end_time = DateTime.utc_now()
-        {start_time, end_time}
-      end)
+      RedisMutex.with_lock(
+        "two_threads_one_loses_lock",
+        fn ->
+          start_time = DateTime.utc_now()
+          :timer.sleep(1000)
+          end_time = DateTime.utc_now()
+          {start_time, end_time}
+        end,
+        opts
+      )
     rescue
       RedisMutex.Error -> :timed_out
     end
@@ -30,17 +38,25 @@ defmodule RedisMutexTest do
     def long_running_task do
       opts = [name: RedisMutex, timeout: 10_000, expiry: 250]
 
-      RedisMutex.with_lock("two_threads_lock_expires", opts, fn ->
-        :timer.sleep(10_000)
-      end)
+      RedisMutex.with_lock(
+        "two_threads_lock_expires",
+        fn ->
+          :timer.sleep(10_000)
+        end,
+        opts
+      )
     end
 
     def quick_task do
       opts = [name: RedisMutex, timeout: 1000, expiry: 500]
 
-      RedisMutex.with_lock("two_threads_lock_expires", opts, fn ->
-        "I RAN!!!"
-      end)
+      RedisMutex.with_lock(
+        "two_threads_lock_expires",
+        fn ->
+          "I RAN!!!"
+        end,
+        opts
+      )
     end
   end
 

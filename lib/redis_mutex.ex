@@ -40,7 +40,7 @@ defmodule RedisMutex do
 
   @callback with_lock(key :: String.t(), fun :: (-> any())) :: any()
 
-  @callback with_lock(key :: String.t(), opts :: lock_opts(), fun :: (-> any())) :: any()
+  @callback with_lock(key :: String.t(), fun :: (-> any()), opts :: lock_opts()) :: any()
 
   @doc """
   The specification for starting a connection with Redis. Can include any of the
@@ -95,9 +95,9 @@ defmodule RedisMutex do
     * `:expiry` - how long the lock will be held before expiring. Expiry is in milliseconds.
     Defaults to 2_000.
   """
-  @spec with_lock(key :: String.t(), opts :: lock_opts(), fun :: (-> any())) :: any()
-  def with_lock(key, opts \\ [], fun) do
-    RedisMutex.Lock.with_lock(key, opts, fun)
+  @spec with_lock(key :: String.t(), fun :: (-> any()), opts :: lock_opts()) :: any()
+  def with_lock(key, fun, opts \\ []) do
+    RedisMutex.Lock.with_lock(key, fun, opts)
   end
 
   defp set_options(start_options) do

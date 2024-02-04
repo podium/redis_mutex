@@ -134,7 +134,7 @@ defmodule MyApp.Mutex do
   
   def with_lock(key, opts, fun) do
     lock_options = Keyword.merge(opts, name: MyApp.Mutex)
-    @redis_mutex.with_lock(key, lock_options, fun)
+    @redis_mutex.with_lock(key, fun, lock_options)
   end
 end
 ```
@@ -183,9 +183,9 @@ defmodule PossumLodge do
   @mutex_options [name: MyApp.Mutex, timeout: 500, expiry: 1_000]
   
   def get_oauth do
-    @redis_mutex.with_lock("my_key", @mutex_options, fn ->
+    @redis_mutex.with_lock("my_key", fn ->
       "Quando omni flunkus moritati"
-    end)
+    end, @mutex_options)
   end
 end
 ```
@@ -205,7 +205,7 @@ mix test
 ### Testing your application without an instance of Redis running
 
 If you want to test your application without an instance of Redis running, you will need to define a double for
-`RedisMutex`.
+`RedisMutex`. `RedisMutex` defines callbacks for `child_spec/1`, `start_link/1`, `with_lock/2` and `with_lock/3`.
 
 #### Define a mock for `RedisMutex`
 
