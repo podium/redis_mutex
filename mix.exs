@@ -32,8 +32,7 @@ defmodule RedisMutex.Mixfile do
 
       # Dev and test dependencies
       {:credo, "~> 1.7", only: [:dev, :test]},
-      {:ex_doc, "~> 0.30", only: :dev},
-      {:hammox, "~> 0.7.0", only: :test}
+      {:ex_doc, "~> 0.30", only: :dev}
     ]
   end
 
