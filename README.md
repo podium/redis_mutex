@@ -48,19 +48,46 @@ Please see the [Usage](#usage) section for more details.
 
 ## Usage
 
-`RedisMutex` offers the user flexibility in how it is used. If you need to start a named connection to Redis
-for a mutex, you can do so via `RedisMutex`.`RedisMutex` offers a default connection name when starting 
-your connection to Redis. This is the simplest way to use `RedisMutex`, and it is the default.
+`RedisMutex` offers the user flexibility in how it is used.
 
-If you want to customize the name used for that connection, you can specify a 
-name to use for the connection.
+If you already have a named connection to Redis and want to re-use that, using `RedisMutex` is dead simple.
 
-If you already have a named connection to Redis and want to re-use that, you can do that as well.
+If you need to start a named connection to Redis for a mutex, you can do so via `RedisMutex`.`RedisMutex` offers
+a default connection name when starting your connection to Redis. This is the simplest way to use `RedisMutex`,
+and it is the default.
+
+If you want to customize the name used for that connection, you can specify a name to use for the connection.
+
+### Using an existing named connection to Redis
+
+In order to use an existing connection, you can simply pass the name of that connection as an option to
+`RedisMutex.with_lock/3`
+
+```elixir
+defmodule PossumLodge do
+
+  @redis_mutex Application.compile_env(:my_app, :redis_mutex, RedisMutex)
+  @redis_connection_opts [name: :my_existing_redis_connection]
+
+  def get_oauth do
+    @redis_mutex.with_lock(
+      "my_key",
+      fn ->
+      "Quando omni flunkus moritati"
+    end,
+    @redis_connection_opts
+    )
+  end
+end
+```
 
 ### Starting a new connection to Redis
 
-In order to start a connection for `RedisMutex`, you need to set options in your configuration and
-add `RedisMutex` to your application's supervision tree.
+If you don't have an existing connection that you want to re-use, and you want to start a connection for `RedisMutex`,
+you need to set options in your configuration and add `RedisMutex` to your application's supervision tree.
+
+If you have a named connection to Redis that you want to re-use, you do not need to add `RedisMutex`
+to your application's supervision tree.
 
 #### Using `RedisMutex`'s defaults
 
@@ -131,13 +158,6 @@ application's supervision tree.
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
   end
 ```
-
-### Using an existing named connection to Redis
-
-If you have a named connection to Redis that you want to re-use, you do not need to add `RedisMutex`
-to your application's supervision tree. You can supply the name of the connection as an options
-when calling `RedisMutex`'s `with_lock/3` function. See the documentation for the `with_lock/3` function
-below for more details.
 
 ### Wrapping `RedisMutex`
 
