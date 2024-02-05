@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 1.0.0 (2024-XX-XX)
+
+### Changed
+
+**Breaking changes**
+- `RedisMutex` no longer starts as its own application
+- `use RedisMutex` replaced in favor of calling `RedisMutex.with_lock/3` directly
+- `with_lock` changed to take a function argument instead of a do block to perform
+- `with_lock` changed to take a keyword list of options instead of optional `timeout` and `expiry` arguments
+
+
 ## 0.6.0 (2023-11-08)
 
 ### Changed
