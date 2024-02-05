@@ -44,7 +44,38 @@ In order to upgrade to version 1.X, you will need to:
 6. If you are not running Redis when you run your unit tests, update your test suite to use a double 
    that handles `RedisMutex`'s updated functions.
 
-Please see the [Usage](#usage) section for more details.
+### What is involved in updating the use of `with_lock`?
+
+Here's a quick example of the changes that need to be made to how you use `with_lock`.
+
+#### Using `with_lock` in version 0.X
+
+```elixir
+defmodule PossumLodge do
+  use RedisMutex
+
+  def get_oauth do
+    with_lock("my_key") do
+      "Quando omni flunkus moritati"
+    end
+  end
+end
+```
+
+#### Using `with_lock` in version 1.X
+
+```elixir
+defmodule PossumLodge do
+
+  def get_oauth do
+    RedisMutex.with_lock("my_key", fn ->
+      "Quando omni flunkus moritati"
+    end)
+  end
+end
+```
+
+Please see the [Usage](#usage) section for more details and examples.
 
 ## Usage
 
