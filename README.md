@@ -103,10 +103,8 @@ defmodule PossumLodge do
   def get_oauth do
     @redis_mutex.with_lock(
       "my_key",
-      fn ->
-      "Quando omni flunkus moritati"
-    end,
-    @redis_connection_opts
+      fn -> "Quando omni flunkus moritati" end,
+      @redis_connection_opts
     )
   end
 end
