@@ -112,12 +112,10 @@ defmodule RedisMutex do
     {redis_url, other_opts} = Keyword.pop(merged_opts, :redis_url)
 
     redis_options =
-      cond do
-        is_binary(redis_url) ->
-          Keyword.take(other_opts, [:name, :sync_connect])
-
-        true ->
-          other_opts
+      if is_binary(redis_url) do
+        Keyword.take(other_opts, [:name, :sync_connect])
+      else
+        other_opts
       end
 
     {redis_url, redis_options}
