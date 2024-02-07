@@ -3,7 +3,7 @@ defmodule RedisMutexTest do
 
   defmodule RedisMutexUser do
     def two_threads_lock do
-      opts = [name: RedisMutex]
+      opts = [name: RedisMutex, timeout: 100, expiry: 200]
 
       RedisMutex.with_lock(
         "two_threads_lock",
@@ -23,7 +23,7 @@ defmodule RedisMutexTest do
         "two_threads_one_loses_lock",
         fn ->
           start_time = DateTime.utc_now()
-          :timer.sleep(1000)
+          :timer.sleep(1_000)
           end_time = DateTime.utc_now()
           {start_time, end_time}
         end,
@@ -34,19 +34,19 @@ defmodule RedisMutexTest do
     end
 
     def long_running_task do
-      opts = [name: RedisMutex, timeout: 10_000, expiry: 250]
+      opts = [name: RedisMutex, timeout: 1_000, expiry: 25]
 
       RedisMutex.with_lock(
         "two_threads_lock_expires",
         fn ->
-          :timer.sleep(10_000)
+          :timer.sleep(1_000)
         end,
         opts
       )
     end
 
     def quick_task do
-      opts = [name: RedisMutex, timeout: 1000, expiry: 500]
+      opts = [name: RedisMutex, timeout: 100, expiry: 50]
 
       RedisMutex.with_lock(
         "two_threads_lock_expires",
@@ -83,7 +83,7 @@ defmodule RedisMutexTest do
 
     test "works with two tasks contending for the same lock, making one run after the other" do
       res =
-        run_in_parallel(2, 5000, fn ->
+        run_in_parallel(2, 500, fn ->
           RedisMutexUser.two_threads_lock()
         end)
 
@@ -106,7 +106,7 @@ defmodule RedisMutexTest do
 
     test "only runs one of the two tasks when the other times out attempting to acquire the lock" do
       res =
-        run_in_parallel(2, 5000, fn ->
+        run_in_parallel(2, 1_500, fn ->
           RedisMutexUser.two_threads_one_loses_lock()
         end)
 
@@ -143,7 +143,7 @@ defmodule RedisMutexTest do
         end)
 
       # let enough time pass so that the lock expire
-      Task.yield(t, 1000)
+      Task.yield(t, 1_000)
 
       # try to run another task and see if it gets the lock
       results = RedisMutexUser.quick_task()
