@@ -3,7 +3,28 @@ defmodule RedisMutex do
   An Elixir library for using Redis locks.
   """
 
+  @type name :: String.t() | atom() | module()
+
+  @typedoc """
+  Options for connecting to Redis.
+
+   ## Options
+
+    * `:name` - the name to use for a Redis connection. When not provided, the connection name
+      defaults to `RedisMutex`. If you have provided a different name for the connection
+      during initiation of the connection, you must provide that name in the options for
+      `with_lock/3`.
+
+    * `:redis_url` - The URL to use connecting to Redis. When this is provided, other options are
+      not needed. When `:redis_url` is provided, the only other options honored are `:name`
+      and `:sync_connect`.
+
+    When `:redis_url` is not provided, other connection options (like `:host` and `:port`) must be
+    provided.
+  """
   @type connection_options :: [
+          name: name(),
+          redis_url: String.t(),
           host: String.t(),
           port: non_neg_integer(),
           database: String.t() | non_neg_integer(),
@@ -28,15 +49,11 @@ defmodule RedisMutex do
           expiry: non_neg_integer()
         ]
 
-  @type start_options :: {:redis_url, String.t()} | connection_options()
-  @type name :: String.t() | atom() | module()
-  @type child_spec_options :: start_options()
-
   @default_name RedisMutex
 
-  @callback child_spec(opts :: child_spec_options()) :: Supervisor.child_spec()
+  @callback child_spec(opts :: connection_options()) :: Supervisor.child_spec()
 
-  @callback start_link(start_options :: RedisMutex.child_spec_options()) ::
+  @callback start_link(start_options :: connection_options()) ::
               {:ok, pid()} | {:error, any()}
 
   @callback with_lock(key :: String.t(), fun :: (-> any())) :: any()
@@ -45,10 +62,9 @@ defmodule RedisMutex do
 
   @doc """
   The specification for starting a connection with Redis. Can include any of the
-  `start_options`. Can also include a `:name`. When a name is provided, this name is
-  used when establishing a connection with Redis.
+  `connection_options`.
   """
-  @spec child_spec(opts :: child_spec_options()) :: Supervisor.child_spec()
+  @spec child_spec(opts :: connection_options()) :: Supervisor.child_spec()
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -61,13 +77,8 @@ defmodule RedisMutex do
 
   @doc """
   Starts a process as part of a supervision tree.
-
-  A `:name` provided as part of the start options is used to retrieve
-  configuration options. Any other options provided as part of the `start_options` override
-  options provided in a configuration. When no `:name` is provided, `RedisMutex` is
-  the name used to retrieve configuration options.
   """
-  @spec start_link(child_spec_options()) :: :ignore | {:error, any} | {:ok, pid}
+  @spec start_link(connection_options()) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(start_options) do
     {redis_url, redis_options} = set_options(start_options)
     connect_to_redis(redis_url, redis_options)
