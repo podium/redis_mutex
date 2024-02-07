@@ -1,2 +1,2 @@
 ExUnit.start()
-ExUnit.configure(exclude: [:redis_dependent, :skip])
+ExUnit.configure(exclude: [:skip])
