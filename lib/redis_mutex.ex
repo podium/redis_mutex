@@ -30,12 +30,13 @@ defmodule RedisMutex do
 
   @type start_options :: {:redis_url, String.t()} | connection_options()
   @type name :: String.t() | atom() | module()
+  @type child_spec_options :: start_options()
 
   @default_name RedisMutex
 
-  @callback child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
+  @callback child_spec(opts :: child_spec_options()) :: Supervisor.child_spec()
 
-  @callback start_link(start_options :: RedisMutex.start_options()) ::
+  @callback start_link(start_options :: RedisMutex.child_spec_options()) ::
               {:ok, pid()} | {:error, any()}
 
   @callback with_lock(key :: String.t(), fun :: (-> any())) :: any()
@@ -47,8 +48,8 @@ defmodule RedisMutex do
   `start_options`. Can also include a `:name`. When a name is provided, this name is
   used when establishing a connection with Redis.
   """
-  @spec child_spec(opts :: Keyword.t()) :: Supervisor.child_spec()
-  def child_spec(opts \\ []) do
+  @spec child_spec(opts :: child_spec_options()) :: Supervisor.child_spec()
+  def child_spec(opts) do
     %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
@@ -66,8 +67,8 @@ defmodule RedisMutex do
   options provided in a configuration. When no `:name` is provided, `RedisMutex` is
   the name used to retrieve configuration options.
   """
-  @spec start_link(start_options()) :: :ignore | {:error, any} | {:ok, pid}
-  def start_link(start_options \\ []) do
+  @spec start_link(child_spec_options()) :: :ignore | {:error, any} | {:ok, pid}
+  def start_link(start_options) do
     {redis_url, redis_options} = set_options(start_options)
     connect_to_redis(redis_url, redis_options)
   end
@@ -101,21 +102,18 @@ defmodule RedisMutex do
   end
 
   defp set_options(start_options) do
+    redis_url = Keyword.get(start_options, :redis_url)
     name = Keyword.get(start_options, :name, @default_name)
-    config_opts = Application.get_env(:redis_mutex, name)
-
-    merged_opts =
-      config_opts
-      |> Keyword.merge(start_options)
-      |> Keyword.merge(name: name, sync_connect: true)
-
-    {redis_url, other_opts} = Keyword.pop(merged_opts, :redis_url)
+    sync_connect = Keyword.get(start_options, :sync_connect, true)
+    base_options = [name: name, sync_connect: sync_connect]
 
     redis_options =
       if is_binary(redis_url) do
-        Keyword.take(other_opts, [:name, :sync_connect])
+        base_options
       else
-        other_opts
+        start_options
+        |> Keyword.drop([:redis_url])
+        |> Keyword.merge(base_options)
       end
 
     {redis_url, redis_options}

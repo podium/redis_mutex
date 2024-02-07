@@ -1,8 +1,6 @@
 defmodule RedisMutexTest do
   use ExUnit.Case, async: true
 
-  @moduletag :redis_dependent
-
   defmodule RedisMutexUser do
     def two_threads_lock do
       opts = [name: RedisMutex]
@@ -61,18 +59,25 @@ defmodule RedisMutexTest do
   end
 
   describe "start_link/1" do
-    test "should start with just the module name" do
-      assert {:ok, _pid} = start_supervised(RedisMutex)
+    test "should start with a redis_url" do
+      assert {:ok, _pid} = start_supervised({RedisMutex, redis_url: "redis://localhost:6379"})
     end
 
-    test "should start with options" do
-      assert {:ok, _pid} = start_supervised({RedisMutex, name: MyApp.RedisMutex})
+    test "should start with a name in the start options redis_url" do
+      assert {:ok, _pid} =
+               start_supervised(
+                 {RedisMutex, name: RedisMutex, redis_url: "redis://localhost:6379"}
+               )
+    end
+
+    test "should start with connection options" do
+      assert {:ok, _pid} = start_supervised({RedisMutex, host: "localhost", port: 6379})
     end
   end
 
   describe "with_lock/4" do
     setup do
-      start_supervised({RedisMutex, name: RedisMutex})
+      start_supervised({RedisMutex, name: RedisMutex, redis_url: "redis://localhost:6379"})
       :ok
     end
 

@@ -96,12 +96,10 @@ In order to use an existing connection, you can simply pass the name of that con
 
 ```elixir
 defmodule PossumLodge do
-
-  @redis_mutex Application.compile_env(:my_app, :redis_mutex, RedisMutex)
   @redis_connection_opts [name: :my_existing_redis_connection]
 
   def get_oauth do
-    @redis_mutex.with_lock(
+    RedisMutex.with_lock(
       "my_key",
       fn -> "Quando omni flunkus moritati" end,
       @redis_connection_opts
@@ -141,12 +139,26 @@ config :redis_mutex, RedisMutex,
 ```
 #### Adding `RedisMutex` to your application's supervision tree with `RedisMutex`'s defaults
 
-If you want to use the defaults, you can simply add `RedisMutex` to your application's supervision tree.
+Set the `options` in your for `RedisMutex` in your supervisiont tree. The options can be a `redis_url` or a set of 
+options for Redis. See `RedisMutex.start_options` for details.
+
+By default, `RedisMutex` will use `RedisMutex` as the name for setting up a connection to Redis.
+
+##### Example with the default name and a `redis_url`
 
 ```elixir
   @impl Application
   def start(_type, _args) do
-    children = other_children() ++ [RedisMutex]
+    children = other_children() ++ [{RedisMutex, redis_url: System.get_env("REDIS_URL")}]
+    Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
+  end
+```
+##### Example with the default name and other connection options
+
+```elixir
+  @impl Application
+  def start(_type, _args) do
+    children = other_children() ++ [{RedisMutex, host: System.get_env("REDIS_URL"), port: System.get_env("REDIS_PORT")}]
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
   end
 ```
@@ -154,36 +166,40 @@ If you want to use the defaults, you can simply add `RedisMutex` to your applica
 #### Using a custom connection name
 
 If you want to start a connection with a name other than `RedisMutex`, you should specify the name you
-want to use when defining the configuration for `RedisMutex` and when adding the `RedisMutex` to your
-application's supervision tree. You will also need to provide this name as an option to the lock function
-when using `RedisMutex`.
+want to use when adding `RedisMutex` to your application's supervision tree. You will also need to provide this 
+name as an option to the lock function when using `RedisMutex`.
 
-#### Setting options for starting a connection with a custom name
-Set the `options` in your `config.exs`. `redis_options` can be a `redis_url` or a set of options for Redis. See
-`RedisMutex.start_options` for details.
-
-##### Example configuration with a `redis_url` and the connection name `MyApp.Mutex`
-
-```elixir
-config :redis_mutex, MyApp.Mutex, redis_url: System.get_env("REDIS_URL")
-```
-
-##### Example configuration with a keyword list of connection options and the connection name `MyApp.Mutex`
-
-```elixir
-config :redis_mutex, MyApp.Mutex,
-  host: "localhost",
-  port: 6379
-```
 #### Adding `RedisMutex` to your application's supervision tree with a custom connection name
 
 In order to specify the connection name, include it as an option when adding `RedisMutex` to your
 application's supervision tree.
 
+##### Example with a name specified and a `redis_url`
+
 ```elixir
   @impl Application
   def start(_type, _args) do
-    children = other_children() ++ [{RedisMutex, name: MyApp.Mutex}]
+    children = other_children() ++ [
+      {RedisMutex, 
+        name: MyApp.Mutex, 
+        redis_url: System.get_env("REDIS_URL", "redis://localhost:6379")
+      }
+    ]
+    Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
+  end
+```
+##### Example with a name specified and other connection options
+
+```elixir
+  @impl Application
+  def start(_type, _args) do
+    children = other_children() ++ [
+      {RedisMutex, 
+        name: MyApp.RedisMutex,
+        host: System.get_env("REDIS_HOST", "localhost"), 
+        port: System.get_env("REDIS_PORT", 6379)
+      }
+    ]
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
   end
 ```
@@ -199,8 +215,9 @@ defmodule MyApp.Mutex do
 
   @redis_mutex Application.compile_env(:my_app, :redis_mutex, RedisMutex)
   
-  def child_spec(_opts) do
-    @redis_mutex.child_spec(name: MyApp.Mutex) 
+  def child_spec(opts) do
+    child_spec_opts = Keyword.merge(opts, name: MyApp.Mutex)
+    @redis_mutex.child_spec(child_spec_opts)
   end
   
   def start_link(start_options) do
@@ -214,16 +231,15 @@ defmodule MyApp.Mutex do
 end
 ```
 
-#### Configuration for the wrapper module
-```elixir
-config :redis_mutex, MyApp.Mutex, redis_url: System.get_env("REDIS_URL")
-```
-
 #### Adding the wrapper module to the supervision tree 
 ```elixir
   @impl Application
   def start(_type, _args) do
-    children = other_children() ++ [MyApp.Mutex]
+    children = other_children() ++ [
+      {MyApp.Mutex,
+      redis_url: System.get_env("REDIS_URL")
+      }
+    ]
     Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
   end
 ```
