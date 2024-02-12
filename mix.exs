@@ -2,7 +2,7 @@ defmodule RedisMutex.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/podium/redis_mutex"
-  @version "0.6.0"
+  @version "1.0.0"
 
   def project do
     [
@@ -22,7 +22,7 @@ defmodule RedisMutex.Mixfile do
   end
 
   def application do
-    [extra_applications: [:logger], mod: {RedisMutex.Application, []}]
+    [extra_applications: [:logger]]
   end
 
   defp deps do
@@ -32,6 +32,7 @@ defmodule RedisMutex.Mixfile do
 
       # Dev and test dependencies
       {:credo, "~> 1.7", only: [:dev, :test]},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.30", only: :dev}
     ]
   end
