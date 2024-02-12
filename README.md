@@ -118,31 +118,14 @@ to your application's supervision tree.
 
 #### Using `RedisMutex`'s defaults
 
-By default, `RedisMutex` will use `RedisMutex` as the name for setting up a connection to Redis.
+By default, `RedisMutex` will use `:redis_mutex_connection` as the name for setting up a connection to Redis.
 
-#### Setting options for starting a connection
-Set the `options` in your `config.exs`. The options can be a `redis_url` or a set of options for 
-Redis. See `RedisMutex.start_options` for details.
-
-##### Example configuration with a `redis_url` and the default name `RedisMutex`
-
-```elixir
-config :redis_mutex, RedisMutex, redis_url: System.get_env("REDIS_URL")
-```
-
-##### Example configuration with a keyword list of connection options and the default name `RedisMutesx`
-
-```elixir
-config :redis_mutex, RedisMutex,
-  host: "localhost",
-  port: 6379
-```
 #### Adding `RedisMutex` to your application's supervision tree with `RedisMutex`'s defaults
 
-Set the `options` in your for `RedisMutex` in your supervisiont tree. The options can be a `redis_url` or a set of 
+Set the `options` in your for `RedisMutex` in your supervision tree. The options can be a `redis_url` or a set of 
 options for Redis. See `RedisMutex.start_options` for details.
 
-By default, `RedisMutex` will use `RedisMutex` as the name for setting up a connection to Redis.
+By default, `RedisMutex` will use `:redis_mutex_connection` as the name for setting up a connection to Redis.
 
 ##### Example with the default name and a `redis_url`
 

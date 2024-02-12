@@ -12,7 +12,7 @@ defmodule RedisMutex.Lock do
   """
   @default_timeout :timer.seconds(40)
   @default_expiry :timer.seconds(20)
-  @default_name RedisMutex
+  @default_name :redis_mutex_connection
 
   @spec with_lock(key :: String.t(), fun :: (-> any()), opts :: RedisMutex.lock_opts()) :: any()
   def with_lock(key, fun, opts \\ []) do

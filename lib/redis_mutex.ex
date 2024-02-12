@@ -49,7 +49,7 @@ defmodule RedisMutex do
           expiry: non_neg_integer()
         ]
 
-  @default_name RedisMutex
+  @default_name :redis_mutex_connection
 
   @callback child_spec(opts :: connection_options()) :: Supervisor.child_spec()
 
