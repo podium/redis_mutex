@@ -16,6 +16,11 @@ defmodule RedisMutex.Mixfile do
       source_url: "https://github.com/podium/redis_mutex",
       deps: deps(),
       docs: docs(),
+      dialyzer: [
+        ignore_warnings: ".dialyzer.ignore-warnings",
+        list_unused_filters: true,
+        plt_add_apps: [:mix]
+      ],
       package: package(),
       test_coverage: [summary: [threshold: 90]]
     ]
