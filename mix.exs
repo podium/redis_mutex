@@ -2,13 +2,13 @@ defmodule RedisMutex.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/podium/redis_mutex"
-  @version "1.0.0"
+  @version "1.1.0"
 
   def project do
     [
       app: :redis_mutex,
       version: @version,
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       description:

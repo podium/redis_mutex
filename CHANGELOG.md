@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.0 (2024-10-01)
+
+* Remove support for Elixir 1.13. Minimum is Elixir 1.14
+
 ## 1.0.0 (2024-02-12)
 
 ### Changed
