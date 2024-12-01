@@ -70,3 +70,6 @@ jobs:
       - run: mix credo --strict --format=oneline
 
       - run: mix test --warnings-as-errors --cover
+
+      - name: Run dialyzer
+        run: mix dialyzer --format github --format dialyxir
