@@ -15,3 +15,7 @@ erl_crash.dump
 
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
+
+# PLT cache
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
