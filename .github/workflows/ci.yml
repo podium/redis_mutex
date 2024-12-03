@@ -61,8 +61,6 @@ jobs:
 
       - run: mix deps.get
 
-      - run: mix format --check-formatted
-
       - run: mix deps.unlock --check-unused
 
       - run: mix deps.compile
@@ -126,3 +124,31 @@ jobs:
 
       - name: Run dialyzer
         run: mix dialyzer --format github --format dialyxir
+
+  check_format:
+    runs-on: ubuntu-22.04
+    env:
+      MIX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.16
+          otp-version: 26
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            deps-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}
+
+      - run: mix deps.get
+
+      - run: mix format --check-formatted
