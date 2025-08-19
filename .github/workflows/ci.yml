@@ -41,7 +41,7 @@ jobs:
             elixir_version: 1.16
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Elixir
         id: beam
@@ -77,7 +77,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Elixir
         id: beam
@@ -131,7 +131,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Elixir
         id: beam
